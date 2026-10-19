@@ -12,78 +12,180 @@
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col font-sans select-none">
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col font-sans select-none pb-20">
 
     <!-- Header -->
     <header class="bg-slate-800 border-b border-slate-700 p-4 sticky top-0 z-50 shadow-md">
         <div class="max-w-4xl mx-auto flex justify-between items-center">
-            <h1 class="text-xl font-bold tracking-wider text-amber-400">🍔 Fast Food Companion</h1>
-            <span class="text-xs bg-slate-700 px-2 py-1 rounded text-slate-300">PWA Aktiv</span>
+            <h1 class="text-lg font-bold tracking-wider text-amber-400">🍔 Fast Food Companion</h1>
+            <span class="text-xs bg-slate-700 px-2 py-1 rounded text-slate-300">Pro Edition</span>
+        </div>
+        <!-- Navigation Tabs -->
+        <div class="max-w-4xl mx-auto flex space-x-1 mt-3 overflow-x-auto pb-1">
+            <button onclick="switchTab('inventory')" id="tab-inventory" class="tab-btn px-3 py-1.5 text-xs font-semibold rounded-lg bg-amber-600 text-white whitespace-nowrap transition">📦 Lager & Einkaufsliste</button>
+            <button onclick="switchTab('recipes')" id="tab-recipes" class="tab-btn px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-700 text-slate-300 whitespace-nowrap transition">📋 Rezepte</button>
+            <button onclick="switchTab('timer')" id="tab-timer" class="tab-btn px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-700 text-slate-300 whitespace-nowrap transition">⏱️ Fritteusen-Timer</button>
+            <button onclick="switchTab('shift')" id="tab-shift" class="tab-btn px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-700 text-slate-300 whitespace-nowrap transition">💰 Schicht & Check</button>
         </div>
     </header>
 
     <!-- Main Content -->
-    <main class="max-w-4xl mx-auto p-4 flex-grow w-full pb-20">
+    <main class="max-w-4xl mx-auto p-4 flex-grow w-full">
         
-        <!-- Sektion: Lagerbestand Tracker -->
-        <section class="bg-slate-800 rounded-xl p-4 shadow-lg border border-slate-700 mb-6">
-            <div class="flex justify-between items-center mb-4">
-                <h2 class="text-lg font-semibold text-amber-300">📦 Lagerbestand Tracker</h2>
-                <button onclick="resetInventory()" class="text-xs bg-rose-600 hover:bg-rose-700 text-white px-3 py-1.5 rounded transition">Zurücksetzen</button>
-            </div>
-            
-            <p class="text-xs text-slate-400 mb-4">Tippe auf + oder –, um den Bestand für deine Schicht anzupassen. Werte werden automatisch gespeichert.</p>
+        <!-- SEKTION 1: Lagerbestand & Einkaufsliste -->
+        <div id="section-inventory" class="space-y-6">
+            <!-- Lagerbestand -->
+            <section class="bg-slate-800 rounded-xl p-4 shadow-lg border border-slate-700">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-base font-semibold text-amber-300">📦 Lagerbestand Tracker</h2>
+                    <button onclick="resetInventory()" class="text-xs bg-rose-600 hover:bg-rose-700 text-white px-2.5 py-1 rounded transition">Reset</button>
+                </div>
+                <div id="inventory-grid" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
+            </section>
 
-            <!-- Grid für die Materialien -->
-            <div id="inventory-grid" class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                <!-- Dynamisch generiert via JavaScript -->
-            </div>
-        </section>
+            <!-- Automatische Einkaufsliste -->
+            <section class="bg-slate-800 rounded-xl p-4 shadow-lg border border-slate-700">
+                <h2 class="text-base font-semibold text-amber-300 mb-2">🛒 Automatische Einkaufsliste</h2>
+                <p class="text-xs text-slate-400 mb-3">Artikel, deren Bestand unter 3 Stück gefallen ist:</p>
+                <div id="shopping-list" class="bg-slate-900/60 p-3 rounded-lg border border-slate-700 text-sm text-slate-300">
+                    <!-- Dynamisch -->
+                </div>
+            </section>
+        </div>
+
+        <!-- SEKTION 2: Rezepte -->
+        <div id="section-recipes" class="hidden space-y-4">
+            <section class="bg-slate-800 rounded-xl p-4 shadow-lg border border-slate-700">
+                <h2 class="text-base font-semibold text-amber-300 mb-3">📋 Rezept-Spickzettel</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                    <div class="bg-slate-700/50 p-3 rounded-lg border border-slate-600">
+                        <h3 class="font-bold text-amber-400 mb-1">Standard Burger</h3>
+                        <p class="text-xs text-slate-300">1x Brötchen &bull; 1x Rindfleisch-Patty &bull; Ketchup &bull; Salat &bull; Zwiebeln</p>
+                    </div>
+                    <div class="bg-slate-700/50 p-3 rounded-lg border border-slate-600">
+                        <h3 class="font-bold text-amber-400 mb-1">Cheeseburger</h3>
+                        <p class="text-xs text-slate-300">1x Brötchen &bull; 1x Rindfleisch-Patty &bull; Cheddar-Käse &bull; Gewürzgurken &bull; Senf</p>
+                    </div>
+                    <div class="bg-slate-700/50 p-3 rounded-lg border border-slate-600">
+                        <h3 class="font-bold text-amber-400 mb-1">Bacon Burger</h3>
+                        <p class="text-xs text-slate-300">1x Brötchen &bull; 1x Rindfleisch-Patty &bull; Cheddar-Käse &bull; Mayonnaise &bull; Tomaten</p>
+                    </div>
+                    <div class="bg-slate-700/50 p-3 rounded-lg border border-slate-600">
+                        <h3 class="font-bold text-amber-400 mb-1">Chicken Burger</h3>
+                        <p class="text-xs text-slate-300">1x Brötchen &bull; 1x Hähnchen-Patty &bull; Salat &bull; Mayonnaise</p>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- SEKTION 3: Timer -->
+        <div id="section-timer" class="hidden space-y-4">
+            <section class="bg-slate-800 rounded-xl p-4 shadow-lg border border-slate-700">
+                <h2 class="text-base font-semibold text-amber-300 mb-3">⏱️ Fritteusen- & Koch-Timer</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div class="bg-slate-700/50 p-4 rounded-lg border border-slate-600 text-center flex flex-col justify-between">
+                        <div>
+                            <h3 class="font-bold text-white mb-1">Pommes / Nuggets</h3>
+                            <div id="timer-display-1" class="text-2xl font-mono font-bold text-amber-400 my-2">00:45</div>
+                        </div>
+                        <button onclick="startTimer(1, 45)" class="w-full bg-amber-600 hover:bg-amber-500 py-2 rounded font-semibold text-sm transition">Start (45s)</button>
+                    </div>
+                    <div class="bg-slate-700/50 p-4 rounded-lg border border-slate-600 text-center flex flex-col justify-between">
+                        <div>
+                            <h3 class="font-bold text-white mb-1">Burger Patty</h3>
+                            <div id="timer-display-2" class="text-2xl font-mono font-bold text-amber-400 my-2">00:30</div>
+                        </div>
+                        <button onclick="startTimer(2, 30)" class="w-full bg-amber-600 hover:bg-amber-500 py-2 rounded font-semibold text-sm transition">Start (30s)</button>
+                    </div>
+                    <div class="bg-slate-700/50 p-4 rounded-lg border border-slate-600 text-center flex flex-col justify-between">
+                        <div>
+                            <h3 class="font-bold text-white mb-1">Hähnchen-Patty</h3>
+                            <div id="timer-display-3" class="text-2xl font-mono font-bold text-amber-400 my-2">01:00</div>
+                        </div>
+                        <button onclick="startTimer(3, 60)" class="w-full bg-amber-600 hover:bg-amber-500 py-2 rounded font-semibold text-sm transition">Start (60s)</button>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- SEKTION 4: Schicht & Checkliste -->
+        <div id="section-shift" class="hidden space-y-4">
+            <!-- Schicht-Rechner -->
+            <section class="bg-slate-800 rounded-xl p-4 shadow-lg border border-slate-700">
+                <h2 class="text-base font-semibold text-amber-300 mb-3">💰 Schicht-Kasse & Einnahmen</h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-1">Einnahmen heute ($):</label>
+                        <input type="number" id="shift-income" placeholder="0" oninput="saveShiftData()" class="w-full bg-slate-900 border border-slate-600 rounded p-2 text-amber-400 font-bold">
+                    </div>
+                    <div>
+                        <label class="block text-xs text-slate-400 mb-1">Materialkosten ($):</label>
+                        <input type="number" id="shift-expenses" placeholder="0" oninput="saveShiftData()" class="w-full bg-slate-900 border border-slate-600 rounded p-2 text-rose-400 font-bold">
+                    </div>
+                </div>
+                <div class="mt-4 p-3 bg-slate-900/60 rounded-lg border border-slate-700 flex justify-between items-center">
+                    <span class="text-sm font-medium">Nettogewinn Schicht:</span>
+                    <span id="shift-profit" class="text-lg font-bold text-emerald-400">$0</span>
+                </div>
+            </section>
+
+            <!-- Schichtende Checkliste -->
+            <section class="bg-slate-800 rounded-xl p-4 shadow-lg border border-slate-700">
+                <h2 class="text-base font-semibold text-amber-300 mb-2">🧼 Checkliste für Schichtende</h2>
+                <p class="text-xs text-slate-400 mb-3">Erledige diese Aufgaben vor dem Feierabend:</p>
+                <div class="space-y-2 text-sm">
+                    <label class="flex items-center space-x-3 bg-slate-700/40 p-2.5 rounded-lg border border-slate-600/60 cursor-pointer">
+                        <input type="checkbox" class="w-4 h-4 accent-amber-500 rounded">
+                        <span>Müllbeutel entsorgen & wechseln</span>
+                    </label>
+                    <label class="flex items-center space-x-3 bg-slate-700/40 p-2.5 rounded-lg border border-slate-600/60 cursor-pointer">
+                        <input type="checkbox" class="w-4 h-4 accent-amber-500 rounded">
+                        <span>Frittieröl wechseln (falls nötig)</span>
+                    </label>
+                    <label class="flex items-center space-x-3 bg-slate-700/40 p-2.5 rounded-lg border border-slate-600/60 cursor-pointer">
+                        <input type="checkbox" class="w-4 h-4 accent-amber-500 rounded">
+                        <span>Tische und Boden reinigen</span>
+                    </label>
+                    <label class="flex items-center space-x-3 bg-slate-700/40 p-2.5 rounded-lg border border-slate-600/60 cursor-pointer">
+                        <input type="checkbox" class="w-4 h-4 accent-amber-500 rounded">
+                        <span>Lagerbestand für nächste Schicht prüfen</span>
+                    </label>
+                </div>
+            </section>
+        </div>
 
     </main>
 
-    <!-- Footer / Navigation -->
+    <!-- Footer -->
     <footer class="bg-slate-800 border-t border-slate-700 text-center py-3 text-xs text-slate-400 fixed bottom-0 left-0 right-0">
-        Fast Food Simulator Companion App &bull; Optimiert für Android Tablet
-    </div></footer>
+        Fast Food Simulator Companion App &bull; Alle Funktionen aktiv
+    </footer>
 
     <!-- JavaScript Logik -->
     <script>
-        // Liste aller Materialien
         const items = [
-            "Burger-Einschlagpapier",
-            "Gefrorene Rindefleisch-Patty",
-            "Burger-Brötchen",
-            "Müllbeutel",
-            "Ketchup",
-            "Mr. Hoop",
-            "Youma Berry",
-            "Youma",
-            "Light Splash Cola",
-            "Splash Cola",
-            "Salat",
-            "Mayonnaise",
-            "Gewürzgurken",
-            "Eisbecher",
-            "Zwiebeln",
-            "Tomaten",
-            "Papiertüten",
-            "Frittieröl",
-            "Pommesbecher (Klein)",
-            "Pommesbecher (Mittel)",
-            "Pommesbecher (Groß)",
-            "Gefrorene Pommes",
-            "Senf",
-            "Gefrorene Hähnchen-Patty",
-            "Kaffee",
-            "Kaffeebecher",
-            "Milch",
-            "Cheddar-Käse",
-            "Nugget-Boxen",
-            "Gefrorene Chicken Nugget"
+            "Burger-Einschlagpapier", "Gefrorene Rindefleisch-Patty", "Burger-Brötchen", "Müllbeutel", 
+            "Ketchup", "Mr. Hoop", "Youma Berry", "Youma", "Light Splash Cola", "Splash Cola", 
+            "Salat", "Mayonnaise", "Gewürzgurken", "Eisbecher", "Zwiebeln", "Tomaten", 
+            "Papiertüten", "Frittieröl", "Pommesbecher (Klein)", "Pommesbecher (Mittel)", 
+            "Pommesbecher (Groß)", "Gefrorene Pommes", "Senf", "Gefrorene Hähnchen-Patty", 
+            "Kaffee", "Kaffeebecher", "Milch", "Cheddar-Käse", "Nugget-Boxen", "Gefrorene Chicken Nugget"
         ];
 
-        // Speicher laden oder initialisieren
+        // Tabs umschalten
+        function switchTab(tabId) {
+            document.querySelectorAll('[id^="section-"]').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.remove('bg-amber-600', 'text-white');
+                btn.classList.add('bg-slate-700', 'text-slate-300');
+            });
+            document.getElementById('section-' + tabId).classList.remove('hidden');
+            const activeBtn = document.getElementById('tab-' + tabId);
+            activeBtn.classList.remove('bg-slate-700', 'text-slate-300');
+            activeBtn.classList.add('bg-amber-600', 'text-white');
+        }
+
+        // Lagerbestand Logic
         function getInventoryData() {
             const data = localStorage.getItem('ffs_inventory');
             return data ? JSON.parse(data) : {};
@@ -91,9 +193,9 @@
 
         function saveInventoryData(data) {
             localStorage.setItem('ffs_inventory', JSON.stringify(data));
+            updateShoppingList(data);
         }
 
-        // UI rendern
         function renderInventory() {
             const grid = document.getElementById('inventory-grid');
             const data = getInventoryData();
@@ -101,43 +203,92 @@
 
             items.forEach((item, index) => {
                 const count = data[item] !== undefined ? data[item] : 0;
-
                 const card = document.createElement('div');
-                card.className = "bg-slate-700/50 border border-slate-600/60 p-3 rounded-lg flex items-center justify-between shadow-sm";
-
+                card.className = "bg-slate-700/50 border border-slate-600/60 p-2.5 rounded-lg flex items-center justify-between shadow-sm";
                 card.innerHTML = `
-                    <span class="text-sm font-medium text-slate-200 pr-2">${item}</span>
-                    <div class="flex items-center space-x-2">
-                        <button onclick="updateCount('${item}', -1)" class="w-9 h-9 bg-slate-600 hover:bg-slate-500 text-white font-bold rounded-lg flex items-center justify-center text-lg active:scale-95 transition">-</button>
-                        <span id="count-${index}" class="w-10 text-center font-semibold text-amber-400">${count}</span>
-                        <button onclick="updateCount('${item}', 1)" class="w-9 h-9 bg-amber-600 hover:bg-amber-500 text-white font-bold rounded-lg flex items-center justify-center text-lg active:scale-95 transition">+</button>
+                    <span class="text-xs font-medium text-slate-200 pr-2">${item}</span>
+                    <div class="flex items-center space-x-1.5">
+                        <button onclick="updateCount('${item}', -1)" class="w-8 h-8 bg-slate-600 hover:bg-slate-500 text-white font-bold rounded flex items-center justify-center text-base">-</button>
+                        <span class="w-8 text-center font-semibold text-amber-400 text-sm">${count}</span>
+                        <button onclick="updateCount('${item}', 1)" class="w-8 h-8 bg-amber-600 hover:bg-amber-500 text-white font-bold rounded flex items-center justify-center text-base">+</button>
                     </div>
                 `;
                 grid.appendChild(card);
             });
+            updateShoppingList(data);
         }
 
-        // Anzahl ändern
         function updateCount(item, change) {
             const data = getInventoryData();
             let current = data[item] !== undefined ? data[item] : 0;
             current += change;
-            if (current < 0) current = 0; // Nicht unter 0 fallen
+            if (current < 0) current = 0;
             data[item] = current;
             saveInventoryData(data);
             renderInventory();
         }
 
-        // Alles auf 0 zurücksetzen
         function resetInventory() {
-            if (confirm("Möchtest du den gesamten Lagerbestand wirklich zurücksetzen?")) {
+            if (confirm("Lagerbestand wirklich zurücksetzen?")) {
                 localStorage.removeItem('ffs_inventory');
                 renderInventory();
             }
         }
 
-        // Beim Start ausführen
-        window.onload = renderInventory;
+        // Einkaufsliste generieren (< 3 Stück)
+        function updateShoppingList(data) {
+            const listContainer = document.getElementById('shopping-list');
+            const lowItems = items.filter(item => (data[item] !== undefined ? data[item] : 0) < 3);
+
+            if (lowItems.length === 0) {
+                listContainer.innerHTML = '<span class="text-emerald-400 text-xs">Alles gut! Keine Artikel unter Mindestbestand.</span>';
+            } else {
+                listContainer.innerHTML = '<ul class="list-disc list-inside space-y-1 text-xs text-rose-300">' + 
+                    lowItems.map(item => `<li><strong>${item}</strong> (Bestand: ${data[item] || 0})</li>`).join('') + 
+                    '</ul>';
+            }
+        }
+
+        // Timer Logik
+        const activeTimers = {};
+        function startTimer(id, duration) {
+            const display = document.getElementById(`timer-display-${id}`);
+            if (activeTimers[id]) clearInterval(activeTimers[id]);
+            
+            let timeLeft = duration;
+            activeTimers[id] = setInterval(() => {
+                let m = Math.floor(timeLeft / 60);
+                let s = timeLeft % 60;
+                display.innerText = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+                
+                if (timeLeft <= 0) {
+                    clearInterval(activeTimers[id]);
+                    display.innerText = "FERTIG!";
+                }
+                timeLeft--;
+            }, 1000);
+        }
+
+        // Schicht-Kasse Logik
+        function saveShiftData() {
+            const income = parseFloat(document.getElementById('shift-income').value) || 0;
+            const expenses = parseFloat(document.getElementById('shift-expenses').value) || 0;
+            const profit = income - expenses;
+            const profitEl = document.getElementById('shift-profit');
+            profitEl.innerText = `$${profit.toFixed(2)}`;
+            profitEl.className = `text-lg font-bold ${profit >= 0 ? 'text-emerald-400' : 'text-rose-400'}`;
+            
+            localStorage.setItem('ffs_shift', JSON.stringify({income, expenses}));
+        }
+
+        // Init beim Laden
+        window.onload = () => {
+            renderInventory();
+            const shift = JSON.parse(localStorage.getItem('ffs_shift') || '{}');
+            if (shift.income !== undefined) document.getElementById('shift-income').value = shift.income;
+            if (shift.expenses !== undefined) document.getElementById('shift-expenses').value = shift.expenses;
+            saveShiftData();
+        };
     </script>
 </body>
 </html>
