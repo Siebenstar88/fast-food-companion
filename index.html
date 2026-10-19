@@ -1,0 +1,975 @@
+<!DOCTYPE html>
+<html lang="de" class="dark h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fast Food Simulator - Companion App</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            red: '#EF4444',
+                            amber: '#F59E0B',
+                            yellow: '#FBBF24',
+                            dark: '#0F172A',
+                            card: '#1E293B',
+                            accent: '#10B981'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Custom scrollbar for tablet smooth scrolling */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+        .touch-active:active {
+            transform: scale(0.97);
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 font-sans h-full flex flex-col select-none overflow-hidden">
+
+    <!-- Top Navigation Header -->
+    <header class="bg-slate-900 border-b border-slate-800 px-4 py-3 flex items-center justify-between shrink-0">
+        <div class="flex items-center space-x-3">
+            <div class="bg-amber-500 text-slate-950 p-2 rounded-xl font-black flex items-center justify-center text-xl shadow-lg shadow-amber-500/20">
+                <i class="fa-solid font-bold fa-burger"></i>
+            </div>
+            <div>
+                <h1 class="text-lg font-bold leading-tight text-amber-400">FFS Companion</h1>
+                <p class="text-xs text-slate-400">Fast Food Manager Tablet Tool</p>
+            </div>
+        </div>
+
+        <!-- Quick Status & Day Info -->
+        <div class="flex items-center space-x-4">
+            <div class="bg-slate-800 border border-slate-700 px-3 py-1.5 rounded-xl flex items-center space-x-3">
+                <div class="text-xs">
+                    <span class="text-slate-400 block text-[10px] uppercase font-bold">Tag</span>
+                    <span id="current-day-display" class="font-bold text-amber-400">Tag 1</span>
+                </div>
+                <div class="h-6 w-px bg-slate-700"></div>
+                <div class="text-xs">
+                    <span class="text-slate-400 block text-[10px] uppercase font-bold">Tagesumsatz</span>
+                    <span id="daily-revenue-display" class="font-bold text-emerald-400">$0.00</span>
+                </div>
+            </div>
+            <button onclick="nextDay()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-3 py-2 rounded-xl text-xs flex items-center space-x-1 transition touch-active">
+                <i class="fa-solid fa-sun"></i>
+                <span class="hidden sm:inline">Neuer Tag</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content Area with Navigation Sidebar -->
+    <div class="flex flex-1 overflow-hidden relative">
+
+        <!-- Navigation Bar (Tablet Optimized - Large Icons/Buttons) -->
+        <nav class="bg-slate-900 border-r border-slate-800 w-20 md:w-56 p-2 flex flex-col justify-between shrink-0">
+            <div class="space-y-1.5">
+                <button onclick="switchTab('cashier')" id="nav-cashier" class="nav-btn active w-full flex items-center space-x-3 px-3 py-3 rounded-xl transition text-left text-slate-400 hover:bg-slate-800">
+                    <i class="fa-solid fa-cash-register text-xl text-amber-400 w-6 text-center"></i>
+                    <span class="font-semibold text-sm hidden md:inline">Kasse & Rechner</span>
+                </button>
+                <button onclick="switchTab('recipes')" id="nav-recipes" class="nav-btn w-full flex items-center space-x-3 px-3 py-3 rounded-xl transition text-left text-slate-400 hover:bg-slate-800">
+                    <i class="fa-solid fa-book-open text-xl text-red-400 w-6 text-center"></i>
+                    <span class="font-semibold text-sm hidden md:inline">Rezepte & Menü</span>
+                </button>
+                <button onclick="switchTab('inventory')" id="nav-inventory" class="nav-btn w-full flex items-center space-x-3 px-3 py-3 rounded-xl transition text-left text-slate-400 hover:bg-slate-800">
+                    <i class="fa-solid fa-boxes-stacked text-xl text-blue-400 w-6 text-center"></i>
+                    <span class="font-semibold text-sm hidden md:inline">Lager & Bestand</span>
+                </button>
+                <button onclick="switchTab('timers')" id="nav-timers" class="nav-btn w-full flex items-center space-x-3 px-3 py-3 rounded-xl transition text-left text-slate-400 hover:bg-slate-800">
+                    <i class="fa-solid fa-stopwatch text-xl text-emerald-400 w-6 text-center"></i>
+                    <span class="font-semibold text-sm hidden md:inline">Küchen-Timer</span>
+                </button>
+                <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-btn w-full flex items-center space-x-3 px-3 py-3 rounded-xl transition text-left text-slate-400 hover:bg-slate-800">
+                    <i class="fa-solid fa-chart-line text-xl text-purple-400 w-6 text-center"></i>
+                    <span class="font-semibold text-sm hidden md:inline">Statistik & Ziele</span>
+                </button>
+                <button onclick="switchTab('upgrades')" id="nav-upgrades" class="nav-btn w-full flex items-center space-x-3 px-3 py-3 rounded-xl transition text-left text-slate-400 hover:bg-slate-800">
+                    <i class="fa-solid fa-wrench text-xl text-orange-400 w-6 text-center"></i>
+                    <span class="font-semibold text-sm hidden md:inline">Upgrades & Notizen</span>
+                </button>
+            </div>
+
+            <!-- Quick Timer Mini-Display in Sidebar -->
+            <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 text-center hidden md:block">
+                <span class="text-[10px] text-slate-400 uppercase font-bold block mb-1">Aktiver Timer</span>
+                <div id="mini-timer-display" class="font-mono text-xs text-amber-400">Kein Timer aktiv</div>
+            </div>
+        </nav>
+
+        <!-- Main View Containers -->
+        <main class="flex-1 overflow-y-auto p-4 md:p-6 bg-slate-950">
+
+            <!-- TAB 1: KASSE & RECHNER -->
+            <section id="tab-cashier" class="tab-content space-y-6">
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                    
+                    <!-- Left Column: Quick Order Selection -->
+                    <div class="lg:col-span-7 space-y-4">
+                        <div class="flex items-center justify-between">
+                            <h2 class="text-lg font-bold text-slate-100 flex items-center gap-2">
+                                <i class="fa-solid fa-cart-plus text-amber-400"></i> Bestellauswahl
+                            </h2>
+                            <button onclick="clearCurrentOrder()" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-lg border border-slate-700">
+                                Auswählen zurücksetzen
+                            </button>
+                        </div>
+
+                        <!-- Category Selector -->
+                        <div class="grid grid-cols-3 gap-2">
+                            <button onclick="renderMenuCategory('burgers')" class="bg-slate-900 border border-slate-800 hover:border-amber-500/50 p-3 rounded-xl text-center touch-active">
+                                <i class="fa-solid fa-burger text-amber-400 text-xl block mb-1"></i>
+                                <span class="text-xs font-semibold">Burger</span>
+                            </button>
+                            <button onclick="renderMenuCategory('sides')" class="bg-slate-900 border border-slate-800 hover:border-amber-500/50 p-3 rounded-xl text-center touch-active">
+                                <i class="fa-solid fa-box-archive text-amber-400 text-xl block mb-1"></i>
+                                <span class="text-xs font-semibold">Beilagen</span>
+                            </button>
+                            <button onclick="renderMenuCategory('drinks')" class="bg-slate-900 border border-slate-800 hover:border-amber-500/50 p-3 rounded-xl text-center touch-active">
+                                <i class="fa-solid fa-wine-glass text-amber-400 text-xl block mb-1"></i>
+                                <span class="text-xs font-semibold">Getränke</span>
+                            </button>
+                        </div>
+
+                        <!-- Menu Items Grid -->
+                        <div id="cashier-menu-grid" class="grid grid-cols-2 sm:grid-cols-3 gap-3 max-h-[360px] overflow-y-auto pr-1">
+                            <!-- Items populated via JS -->
+                        </div>
+                    </div>
+
+                    <!-- Right Column: Active Order & Change Calculator -->
+                    <div class="lg:col-span-5 space-y-4">
+                        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-4 shadow-xl">
+                            <h2 class="text-md font-bold text-slate-100 flex items-center justify-between border-b border-slate-800 pb-3">
+                                <span><i class="fa-solid fa-receipt text-amber-400 mr-2"></i>Aktuelle Bestellung</span>
+                                <span id="order-item-count" class="text-xs bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded-full">0 Artikel</span>
+                            </h2>
+
+                            <!-- Order List -->
+                            <div id="active-order-list" class="space-y-2 max-h-48 overflow-y-auto pr-1 text-sm min-h-[100px]">
+                                <div class="text-slate-500 text-center py-6 text-xs italic">Klicke Artikel links an, um sie zur Bestellung hinzuzufügen.</div>
+                            </div>
+
+                            <!-- Totals & Cashier Helper -->
+                            <div class="border-t border-slate-800 pt-3 space-y-3">
+                                <div class="flex justify-between items-center text-lg font-bold">
+                                    <span class="text-slate-300">Gesamtsumme:</span>
+                                    <span id="order-total-price" class="text-amber-400 text-xl">$0.00</span>
+                                </div>
+
+                                <!-- Change Calculator -->
+                                <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-2">
+                                    <label class="text-xs font-semibold text-slate-400 block">Kunde gibt (Bargeld):</label>
+                                    <div class="flex gap-2">
+                                        <input type="number" id="cash-given-input" step="0.5" placeholder="0.00" oninput="calculateChange()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 font-mono text-lg focus:outline-none focus:border-amber-500">
+                                        <button onclick="setExactCash()" class="bg-slate-800 hover:bg-slate-700 text-xs px-3 rounded-lg text-slate-300 font-medium">Passend</button>
+                                    </div>
+
+                                    <div class="flex justify-between items-center pt-2 border-t border-slate-800">
+                                        <span class="text-xs font-semibold text-slate-400">Rückgeld:</span>
+                                        <span id="change-due-display" class="font-mono text-lg font-bold text-emerald-400">$0.00</span>
+                                    </div>
+                                </div>
+
+                                <!-- Action Buttons -->
+                                <div class="grid grid-cols-2 gap-2 pt-2">
+                                    <button onclick="completeOrder()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl text-center text-sm transition touch-active shadow-lg shadow-emerald-600/20">
+                                        <i class="fa-solid fa-check mr-1"></i> Abschließen
+                                    </button>
+                                    <button onclick="addOrderToQueue()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold py-3 rounded-xl text-center text-sm transition touch-active">
+                                        <i class="fa-solid fa-clock mr-1"></i> In Warteschlange
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Orders Queue Section -->
+                        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3">
+                            <h3 class="text-sm font-bold text-slate-300 flex items-center justify-between">
+                                <span><i class="fa-solid fa-users text-amber-400 mr-2"></i>Warteschlange</span>
+                                <span id="queue-count" class="text-xs text-slate-400">0 Bestellungen</span>
+                            </h3>
+                            <div id="order-queue-list" class="space-y-2 max-h-36 overflow-y-auto">
+                                <div class="text-xs text-slate-500 text-center py-2">Keine wartenden Bestellungen</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 2: REZEPTE & MENÜ -->
+            <section id="tab-recipes" class="tab-content hidden space-y-4">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                    <h2 class="text-lg font-bold text-slate-100 flex items-center gap-2">
+                        <i class="fa-solid fa-book-open text-red-400"></i> Rezept- & Menüreferenz
+                    </h2>
+                    <input type="text" id="recipe-search" oninput="filterRecipes()" placeholder="Rezept oder Zutat suchen..." class="bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-200 w-full sm:w-64 focus:outline-none focus:border-red-500">
+                </div>
+
+                <div id="recipes-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <!-- Recipes loaded via JS -->
+                </div>
+            </section>
+
+            <!-- TAB 3: LAGER & BESTAND -->
+            <section id="tab-inventory" class="tab-content hidden space-y-6">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h2 class="text-lg font-bold text-slate-100 flex items-center gap-2">
+                            <i class="fa-solid fa-boxes-stacked text-blue-400"></i> Lagerbestand Tracker
+                        </h2>
+                        <p class="text-xs text-slate-400">Verfolge deinen Vorrat & erstelle Nachbestellungen</p>
+                    </div>
+                    <button onclick="resetInventoryToDefault()" class="text-xs bg-slate-900 border border-slate-800 text-slate-400 px-3 py-2 rounded-xl hover:text-slate-200">
+                        Auffüllen (Standard)
+                    </button>
+                </div>
+
+                <div id="inventory-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <!-- Stock Cards populated via JS -->
+                </div>
+
+                <!-- Shopping / Restock Reminder -->
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3">
+                    <h3 class="text-sm font-bold text-amber-400 flex items-center gap-2">
+                        <i class="fa-solid fa-triangle-exclamation"></i> Niedriger Bestand Warnungen
+                    </h3>
+                    <div id="low-stock-list" class="flex flex-wrap gap-2">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 4: KÜCHEN-TIMER -->
+            <section id="tab-timers" class="tab-content hidden space-y-6">
+                <div>
+                    <h2 class="text-lg font-bold text-slate-100 flex items-center gap-2">
+                        <i class="fa-solid fa-stopwatch text-emerald-400"></i> Multi-Küche Timer
+                    </h2>
+                    <p class="text-xs text-slate-400">Stelle Schnelltimer fürs Grillen, Frittieren und Nachfüllen</p>
+                </div>
+
+                <!-- Quick Preset Timer Buttons -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <button onclick="startCustomTimer('Patty Grillen', 25)" class="bg-slate-900 border border-slate-800 hover:border-emerald-500/50 p-3 rounded-xl text-center touch-active">
+                        <i class="fa-solid fa-fire text-amber-500 text-xl block mb-1"></i>
+                        <span class="text-xs font-bold block">Patty Grillen</span>
+                        <span class="text-[10px] text-slate-400">25 Sek.</span>
+                    </button>
+                    <button onclick="startCustomTimer('Pommes Frittieren', 35)" class="bg-slate-900 border border-slate-800 hover:border-emerald-500/50 p-3 rounded-xl text-center touch-active">
+                        <i class="fa-solid fa-box text-yellow-500 text-xl block mb-1"></i>
+                        <span class="text-xs font-bold block">Pommes Frittieren</span>
+                        <span class="text-[10px] text-slate-400">35 Sek.</span>
+                    </button>
+                    <button onclick="startCustomTimer('Getränke Nachfüllen', 15)" class="bg-slate-900 border border-slate-800 hover:border-emerald-500/50 p-3 rounded-xl text-center touch-active">
+                        <i class="fa-solid fa-glass-water text-blue-400 text-xl block mb-1"></i>
+                        <span class="text-xs font-bold block">Getränke Nachfüllen</span>
+                        <span class="text-[10px] text-slate-400">15 Sek.</span>
+                    </button>
+                    <button onclick="startCustomTimer('Putz / Restock', 60)" class="bg-slate-900 border border-slate-800 hover:border-emerald-500/50 p-3 rounded-xl text-center touch-active">
+                        <i class="fa-solid fa-broom text-purple-400 text-xl block mb-1"></i>
+                        <span class="text-xs font-bold block">Reinigen / Lager</span>
+                        <span class="text-[10px] text-slate-400">60 Sek.</span>
+                    </button>
+                </div>
+
+                <!-- Active Timers Container -->
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-4">
+                    <h3 class="text-sm font-bold text-slate-200">Laufende Timer</h3>
+                    <div id="active-timers-container" class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div class="text-slate-500 text-xs text-center py-6 col-span-2">Keine aktiven Timer. Nutze die Buttons oben, um einen Timer zu starten.</div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 5: STATISTIK & ZIELE -->
+            <section id="tab-dashboard" class="tab-content hidden space-y-6">
+                <div>
+                    <h2 class="text-lg font-bold text-slate-100 flex items-center gap-2">
+                        <i class="fa-solid fa-chart-line text-purple-400"></i> Tagesübersicht & Performance
+                    </h2>
+                    <p class="text-xs text-slate-400">Verfolge Einnahmen, Trinkgelder und Tagesziele</p>
+                </div>
+
+                <!-- Summary Cards -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl">
+                        <span class="text-xs text-slate-400 font-medium block mb-1">Tagesumsatz</span>
+                        <span id="stat-revenue" class="text-xl font-bold text-emerald-400 font-mono">$0.00</span>
+                    </div>
+                    <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl">
+                        <span class="text-xs text-slate-400 font-medium block mb-1">Bediente Kunden</span>
+                        <span id="stat-customers" class="text-xl font-bold text-amber-400 font-mono">0</span>
+                    </div>
+                    <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl">
+                        <span class="text-xs text-slate-400 font-medium block mb-1">Trinkgeld GESAMT</span>
+                        <span id="stat-tips" class="text-xl font-bold text-blue-400 font-mono">$0.00</span>
+                    </div>
+                    <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl">
+                        <span class="text-xs text-slate-400 font-medium block mb-1">Verkaufte Burger</span>
+                        <span id="stat-burgers" class="text-xl font-bold text-red-400 font-mono">0</span>
+                    </div>
+                </div>
+
+                <!-- Daily Target Goal Progress -->
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-sm font-bold text-slate-200">Tagesziel-Fortschritt ($500.00)</h3>
+                        <span id="goal-percentage" class="text-xs font-bold text-amber-400">0%</span>
+                    </div>
+                    <div class="w-full bg-slate-950 h-3 rounded-full overflow-hidden border border-slate-800">
+                        <div id="goal-progress-bar" class="bg-gradient-to-r from-amber-500 to-emerald-500 h-full w-0 transition-all duration-500"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 6: UPGRADES & NOTIZEN -->
+            <section id="tab-upgrades" class="tab-content hidden space-y-6">
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                    
+                    <!-- Upgrades Tracker -->
+                    <div class="lg:col-span-7 space-y-4">
+                        <h2 class="text-lg font-bold text-slate-100 flex items-center gap-2">
+                            <i class="fa-solid fa-wrench text-orange-400"></i> Freischaltbare Upgrades & Geräte
+                        </h2>
+                        <div id="upgrades-list" class="space-y-3">
+                            <!-- Populated via JS -->
+                        </div>
+                    </div>
+
+                    <!-- Custom Quick Notes -->
+                    <div class="lg:col-span-5 space-y-4">
+                        <h2 class="text-lg font-bold text-slate-100 flex items-center gap-2">
+                            <i class="fa-solid fa-note-sticky text-yellow-400"></i> Notizen & Erinnerungen
+                        </h2>
+                        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3">
+                            <textarea id="custom-notes" oninput="saveNotes()" rows="10" placeholder="Schreibe hier Notizen für deine Spiel-Session... (z.B. Nächstes Ziel: Zweiter Grill für $800 kaufen)" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm text-slate-200 focus:outline-none focus:border-amber-500 resize-none font-sans"></textarea>
+                            <span class="text-[10px] text-slate-500 block text-right">Wird automatisch gespeichert</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- Notification Toast Container -->
+    <div id="toast-container" class="fixed bottom-4 right-4 z-50 space-y-2 pointer-events-none"></div>
+
+    <script>
+        /* --- APPLICATION DATA STRUCTURES --- */
+
+        // Recipe & Menu Database
+        const menuData = {
+            burgers: [
+                { id: 'b1', name: 'Standard Burger', price: 5.50, ingredients: ['Burger Brötchen', 'Rindfleisch Patty', 'Salat'], icon: 'fa-burger' },
+                { id: 'b2', name: 'Cheeseburger', price: 6.50, ingredients: ['Burger Brötchen', 'Rindfleisch Patty', 'Käsescheibe', 'Salat'], icon: 'fa-burger' },
+                { id: 'b3', name: 'Doppel Cheeseburger', price: 8.50, ingredients: ['Burger Brötchen', '2x Rindfleisch Patty', '2x Käsescheibe', 'Sauce'], icon: 'fa-burger' },
+                { id: 'b4', name: 'Bacon Deluxe', price: 9.00, ingredients: ['Burger Brötchen', 'Rindfleisch Patty', 'Käsescheibe', 'Speck/Bacon', 'Sauce'], icon: 'fa-burger' }
+            ],
+            sides: [
+                { id: 's1', name: 'Pommes (Klein)', price: 2.50, ingredients: ['Kartoffeln', 'Pommes Tüte'], icon: 'fa-box-archive' },
+                { id: 's2', name: 'Pommes (Groß)', price: 3.50, ingredients: ['Kartoffeln', 'Große Pommes Box'], icon: 'fa-box-archive' },
+                { id: 's3', name: 'Zwiebelringe', price: 3.00, ingredients: ['Zwiebelringe', 'Box'], icon: 'fa-circle-dot' }
+            ],
+            drinks: [
+                { id: 'd1', name: 'Softdrink (Klein)', price: 2.00, ingredients: ['Becher Klein', 'Sirup'], icon: 'fa-wine-glass' },
+                { id: 'd2', name: 'Softdrink (Groß)', price: 3.00, ingredients: ['Becher Groß', 'Sirup'], icon: 'fa-wine-glass' },
+                { id: 'd3', name: 'Milkshake', price: 4.00, ingredients: ['Becher Groß', 'Milch/Eis'], icon: 'fa-glass-water' }
+            ]
+        };
+
+        // Inventory Initial Items
+        let inventory = [
+            { id: 'buns', name: 'Brötchen', qty: 40, max: 100, minAlert: 10, unit: 'Stück' },
+            { id: 'patties', name: 'Fleisch Patties', qty: 35, max: 100, minAlert: 10, unit: 'Stück' },
+            { id: 'cheese', name: 'Käsescheiben', qty: 50, max: 100, minAlert: 15, unit: 'Scheiben' },
+            { id: 'lettuce', name: 'Salat', qty: 30, max: 80, minAlert: 10, unit: 'Köpfe/Portionen' },
+            { id: 'sauce', name: 'Saucen Flaschen', qty: 8, max: 20, minAlert: 2, unit: 'Flaschen' },
+            { id: 'potatoes', name: 'Kartoffeln/Pommes', qty: 25, max: 80, minAlert: 8, unit: 'Portionen' },
+            { id: 'cups', name: 'Getränkebecher', qty: 60, max: 120, minAlert: 20, unit: 'Becher' }
+        ];
+
+        // Upgrades List
+        let upgrades = [
+            { id: 'u1', name: 'Zweiter Grill', price: 500, bought: false, desc: 'Ermöglicht das zeitgleiche Braten von 4 weiteren Patties.' },
+            { id: 'u2', name: 'Doppel-Fritteuse', price: 400, bought: false, desc: 'Verdoppelt die Frittierkapazität für Pommes.' },
+            { id: 'u3', name: 'Automatische Getränkestation', price: 750, bought: false, desc: 'Befüllt Getränke doppelt so schnell.' },
+            { id: 'u4', name: 'Erweiterter Lagerraum', price: 1000, bought: false, desc: 'Erhöht die maximale Lagerkapazität aller Zutaten.' }
+        ];
+
+        // App State
+        let currentDay = 1;
+        let dailyRevenue = 0.0;
+        let dailyTips = 0.0;
+        let totalCustomers = 0;
+        let totalBurgersSold = 0;
+        let activeOrder = [];
+        let orderQueue = [];
+        let activeTimers = [];
+        let dailyGoal = 500.0;
+
+        /* --- INITIALIZATION --- */
+        window.onload = function() {
+            loadFromLocalStorage();
+            renderMenuCategory('burgers');
+            renderRecipes();
+            renderInventory();
+            renderUpgrades();
+            updateDashboard();
+            updateHeaderDisplay();
+        };
+
+        /* --- TAB NAVIGATION --- */
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.nav-btn').forEach(el => {
+                el.classList.remove('bg-slate-800', 'text-amber-400');
+                el.classList.add('text-slate-400');
+            });
+
+            document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+            const activeBtn = document.getElementById(`nav-${tabId}`);
+            activeBtn.classList.add('bg-slate-800', 'text-amber-400');
+            activeBtn.classList.remove('text-slate-400');
+        }
+
+        /* --- CASHIER & ORDER CALCULATOR --- */
+        let currentCategory = 'burgers';
+
+        function renderMenuCategory(cat) {
+            currentCategory = cat;
+            const container = document.getElementById('cashier-menu-grid');
+            container.innerHTML = '';
+
+            menuData[cat].forEach(item => {
+                const card = document.createElement('button');
+                card.onclick = () => addToOrder(item);
+                card.className = 'bg-slate-900 border border-slate-800 hover:border-amber-500 p-3 rounded-xl text-left flex flex-col justify-between transition touch-active';
+                card.innerHTML = `
+                    <div class="flex items-center space-x-2 mb-2">
+                        <i class="fa-solid ${item.icon} text-amber-400 text-lg"></i>
+                        <span class="text-xs font-bold text-slate-200 leading-tight">${item.name}</span>
+                    </div>
+                    <div class="text-emerald-400 font-mono text-sm font-bold">$${item.price.toFixed(2)}</div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function addToOrder(item) {
+            const existing = activeOrder.find(o => o.id === item.id);
+            if (existing) {
+                existing.qty++;
+            } else {
+                activeOrder.push({ ...item, qty: 1 });
+            }
+            renderActiveOrder();
+        }
+
+        function removeFromOrder(itemId) {
+            activeOrder = activeOrder.filter(o => o.id !== itemId);
+            renderActiveOrder();
+        }
+
+        function clearCurrentOrder() {
+            activeOrder = [];
+            document.getElementById('cash-given-input').value = '';
+            renderActiveOrder();
+        }
+
+        function renderActiveOrder() {
+            const container = document.getElementById('active-order-list');
+            const countBadge = document.getElementById('order-item-count');
+            const totalDisplay = document.getElementById('order-total-price');
+
+            if (activeOrder.length === 0) {
+                container.innerHTML = '<div class="text-slate-500 text-center py-6 text-xs italic">Klicke Artikel links an, um sie zur Bestellung hinzuzufügen.</div>';
+                countBadge.innerText = '0 Artikel';
+                totalDisplay.innerText = '$0.00';
+                calculateChange();
+                return;
+            }
+
+            let total = 0;
+            let totalItems = 0;
+            container.innerHTML = '';
+
+            activeOrder.forEach(item => {
+                const itemTotal = item.price * item.qty;
+                total += itemTotal;
+                totalItems += item.qty;
+
+                const row = document.createElement('div');
+                row.className = 'flex items-center justify-between bg-slate-950 p-2 rounded-lg border border-slate-800';
+                row.innerHTML = `
+                    <div>
+                        <div class="text-xs font-bold text-slate-200">${item.name}</div>
+                        <div class="text-[10px] text-slate-400 font-mono">${item.qty}x @ $${item.price.toFixed(2)}</div>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <span class="font-mono text-xs font-bold text-emerald-400">$${itemTotal.toFixed(2)}</span>
+                        <button onclick="removeFromOrder('${item.id}')" class="text-red-400 hover:text-red-300 p-1">
+                            <i class="fa-solid fa-trash-can text-xs"></i>
+                        </button>
+                    </div>
+                `;
+                container.appendChild(row);
+            });
+
+            countBadge.innerText = `${totalItems} Artikel`;
+            totalDisplay.innerText = `$${total.toFixed(2)}`;
+            calculateChange();
+        }
+
+        function setExactCash() {
+            let total = getOrderTotal();
+            document.getElementById('cash-given-input').value = total.toFixed(2);
+            calculateChange();
+        }
+
+        function getOrderTotal() {
+            return activeOrder.reduce((sum, item) => sum + (item.price * item.qty), 0);
+        }
+
+        function calculateChange() {
+            const total = getOrderTotal();
+            const cashInput = parseFloat(document.getElementById('cash-given-input').value) || 0;
+            const changeDisplay = document.getElementById('change-due-display');
+
+            const change = cashInput - total;
+            if (change >= 0) {
+                changeDisplay.innerText = `$${change.toFixed(2)}`;
+                changeDisplay.className = 'font-mono text-lg font-bold text-emerald-400';
+            } else {
+                changeDisplay.innerText = `Zu wenig ($${Math.abs(change).toFixed(2)})`;
+                changeDisplay.className = 'font-mono text-sm font-bold text-red-400';
+            }
+        }
+
+        function completeOrder() {
+            if (activeOrder.length === 0) return;
+
+            const total = getOrderTotal();
+            dailyRevenue += total;
+            totalCustomers += 1;
+
+            // Track burger count
+            activeOrder.forEach(item => {
+                if (item.id.startsWith('b')) totalBurgersSold += item.qty;
+                // Auto deduct ingredients stock (optional helper)
+                deductStockForOrder(item);
+            });
+
+            showToast(`Bestellung abgeschlossen ($${total.toFixed(2)})`, 'success');
+            clearCurrentOrder();
+            updateDashboard();
+            updateHeaderDisplay();
+            saveToLocalStorage();
+        }
+
+        function addOrderToQueue() {
+            if (activeOrder.length === 0) return;
+
+            orderQueue.push({
+                id: Date.now(),
+                items: [...activeOrder],
+                total: getOrderTotal()
+            });
+
+            clearCurrentOrder();
+            renderQueue();
+            showToast('Bestellung zur Warteschlange hinzugefügt', 'info');
+        }
+
+        function renderQueue() {
+            const container = document.getElementById('order-queue-list');
+            const count = document.getElementById('queue-count');
+            count.innerText = `${orderQueue.length} Bestellungen`;
+
+            if (orderQueue.length === 0) {
+                container.innerHTML = '<div class="text-xs text-slate-500 text-center py-2">Keine wartenden Bestellungen</div>';
+                return;
+            }
+
+            container.innerHTML = '';
+            orderQueue.forEach((q, index) => {
+                const item = document.createElement('div');
+                item.className = 'bg-slate-950 p-2.5 rounded-xl border border-slate-800 flex justify-between items-center text-xs';
+                item.innerHTML = `
+                    <div>
+                        <span class="font-bold text-amber-400">#${index + 1}</span>
+                        <span class="text-slate-300 ml-2">${q.items.map(i => i.qty + 'x ' + i.name).join(', ')}</span>
+                    </div>
+                    <button onclick="finishQueueOrder(${q.id})" class="bg-emerald-600 hover:bg-emerald-500 text-white px-2 py-1 rounded-lg font-bold text-[10px]">
+                        Fertig
+                    </button>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        function finishQueueOrder(qId) {
+            const order = orderQueue.find(o => o.id === qId);
+            if (order) {
+                dailyRevenue += order.total;
+                totalCustomers += 1;
+                orderQueue = orderQueue.filter(o => o.id !== qId);
+                renderQueue();
+                updateDashboard();
+                updateHeaderDisplay();
+                showToast('Wartende Bestellung abgeschlossen!', 'success');
+            }
+        }
+
+        /* --- RECIPES REFERENCE --- */
+        function renderRecipes() {
+            const container = document.getElementById('recipes-grid');
+            container.innerHTML = '';
+
+            const allRecipes = [...menuData.burgers, ...menuData.sides, ...menuData.drinks];
+            allRecipes.forEach(recipe => {
+                const card = document.createElement('div');
+                card.className = 'bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3';
+                card.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <div class="flex items-center space-x-2">
+                            <i class="fa-solid ${recipe.icon} text-red-400 text-lg"></i>
+                            <h3 class="font-bold text-sm text-slate-100">${recipe.name}</h3>
+                        </div>
+                        <span class="text-xs font-mono font-bold text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded-lg">$${recipe.price.toFixed(2)}</span>
+                    </div>
+                    <div>
+                        <span class="text-[10px] text-slate-400 font-bold uppercase block mb-1">Zutaten / Aufbaureihenfolge:</span>
+                        <ul class="text-xs space-y-1">
+                            ${recipe.ingredients.map(ing => `<li class="text-slate-300 flex items-center gap-1.5"><i class="fa-solid fa-check text-[10px] text-amber-400"></i> ${ing}</li>`).join('')}
+                        </ul>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function filterRecipes() {
+            const term = document.getElementById('recipe-search').value.toLowerCase();
+            const cards = document.getElementById('recipes-grid').children;
+            const allRecipes = [...menuData.burgers, ...menuData.sides, ...menuData.drinks];
+
+            allRecipes.forEach((recipe, index) => {
+                const matches = recipe.name.toLowerCase().includes(term) || recipe.ingredients.some(i => i.toLowerCase().includes(term));
+                cards[index].style.display = matches ? 'block' : 'none';
+            });
+        }
+
+        /* --- INVENTORY TRACKER --- */
+        function renderInventory() {
+            const container = document.getElementById('inventory-grid');
+            const lowStockList = document.getElementById('low-stock-list');
+            container.innerHTML = '';
+            lowStockList.innerHTML = '';
+
+            let lowStockCount = 0;
+
+            inventory.forEach(item => {
+                const isLow = item.qty <= item.minAlert;
+                if (isLow) lowStockCount++;
+
+                const card = document.createElement('div');
+                card.className = `bg-slate-900 border ${isLow ? 'border-red-500/50 bg-red-950/10' : 'border-slate-800'} rounded-2xl p-4 space-y-3`;
+                card.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <span class="font-bold text-sm text-slate-200">${item.name}</span>
+                        <span class="text-xs px-2 py-0.5 rounded-full ${isLow ? 'bg-red-500/20 text-red-400 font-bold' : 'bg-slate-800 text-slate-400'}">${item.qty} / ${item.max} ${item.unit}</span>
+                    </div>
+                    <div class="w-full bg-slate-950 h-2 rounded-full overflow-hidden border border-slate-800">
+                        <div class="${isLow ? 'bg-red-500' : 'bg-blue-500'} h-full" style="width: ${(item.qty / item.max) * 100}%"></div>
+                    </div>
+                    <div class="flex justify-between items-center pt-1">
+                        <button onclick="updateStock('${item.id}', -5)" class="bg-slate-800 hover:bg-slate-700 text-slate-300 w-8 h-8 rounded-lg font-bold text-sm">-5</button>
+                        <button onclick="updateStock('${item.id}', -1)" class="bg-slate-800 hover:bg-slate-700 text-slate-300 w-8 h-8 rounded-lg font-bold text-sm">-1</button>
+                        <button onclick="updateStock('${item.id}', 1)" class="bg-slate-800 hover:bg-slate-700 text-slate-300 w-8 h-8 rounded-lg font-bold text-sm">+1</button>
+                        <button onclick="updateStock('${item.id}', 10)" class="bg-slate-800 hover:bg-slate-700 text-slate-300 w-8 h-8 rounded-lg font-bold text-sm">+10</button>
+                    </div>
+                `;
+                container.appendChild(card);
+
+                if (isLow) {
+                    const tag = document.createElement('span');
+                    tag.className = 'bg-red-500/20 border border-red-500/30 text-red-400 text-xs px-2.5 py-1 rounded-xl font-medium';
+                    tag.innerText = `⚠️ ${item.name} nachbestellen! (${item.qty} übrig)`;
+                    lowStockList.appendChild(tag);
+                }
+            });
+
+            if (lowStockCount === 0) {
+                lowStockList.innerHTML = '<span class="text-xs text-slate-500 italic">Alle Bestände sind ausreichend vorhanden.</span>';
+            }
+        }
+
+        function updateStock(id, change) {
+            const item = inventory.find(i => i.id === id);
+            if (item) {
+                item.qty = Math.max(0, Math.min(item.max, item.qty + change));
+                renderInventory();
+                saveToLocalStorage();
+            }
+        }
+
+        function deductStockForOrder(orderItem) {
+            if (orderItem.id.startsWith('b')) {
+                updateStock('buns', -1);
+                updateStock('patties', -1);
+            }
+            if (orderItem.id.startsWith('s')) {
+                updateStock('potatoes', -1);
+            }
+            if (orderItem.id.startsWith('d')) {
+                updateStock('cups', -1);
+            }
+        }
+
+        function resetInventoryToDefault() {
+            inventory.forEach(i => i.qty = i.max);
+            renderInventory();
+            saveToLocalStorage();
+            showToast('Lagerbestand auf Maximum zurückgesetzt', 'info');
+        }
+
+        /* --- KITCHEN TIMERS --- */
+        function startCustomTimer(label, seconds) {
+            const timerId = Date.now();
+            const timerObj = {
+                id: timerId,
+                label: label,
+                remaining: seconds,
+                total: seconds,
+                interval: null
+            };
+
+            timerObj.interval = setInterval(() => {
+                timerObj.remaining--;
+                renderTimers();
+                updateMiniTimer();
+
+                if (timerObj.remaining <= 0) {
+                    clearInterval(timerObj.interval);
+                    showToast(`🔔 TIMER ABGELAUFEN: ${label}!`, 'alert');
+                    playAlertSound();
+                    activeTimers = activeTimers.filter(t => t.id !== timerId);
+                    renderTimers();
+                    updateMiniTimer();
+                }
+            }, 1000);
+
+            activeTimers.push(timerObj);
+            renderTimers();
+            updateMiniTimer();
+        }
+
+        function renderTimers() {
+            const container = document.getElementById('active-timers-container');
+            if (activeTimers.length === 0) {
+                container.innerHTML = '<div class="text-slate-500 text-xs text-center py-6 col-span-2">Keine aktiven Timer. Nutze die Buttons oben, um einen Timer zu starten.</div>';
+                return;
+            }
+
+            container.innerHTML = '';
+            activeTimers.forEach(t => {
+                const percent = (t.remaining / t.total) * 100;
+                const card = document.createElement('div');
+                card.className = 'bg-slate-950 border border-slate-800 p-3 rounded-xl space-y-2';
+                card.innerHTML = `
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs font-bold text-slate-200">${t.label}</span>
+                        <span class="font-mono font-bold text-amber-400 text-sm">${t.remaining}s</span>
+                    </div>
+                    <div class="w-full bg-slate-900 h-2 rounded-full overflow-hidden">
+                        <div class="bg-amber-500 h-full transition-all duration-1000" style="width: ${percent}%"></div>
+                    </div>
+                    <button onclick="cancelTimer(${t.id})" class="text-[10px] text-red-400 hover:text-red-300 font-semibold">Stoppen</button>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function cancelTimer(id) {
+            const t = activeTimers.find(x => x.id === id);
+            if (t) {
+                clearInterval(t.interval);
+                activeTimers = activeTimers.filter(x => x.id !== id);
+                renderTimers();
+                updateMiniTimer();
+            }
+        }
+
+        function updateMiniTimer() {
+            const display = document.getElementById('mini-timer-display');
+            if (activeTimers.length === 0) {
+                display.innerText = 'Kein Timer aktiv';
+            } else {
+                const next = activeTimers[0];
+                display.innerText = `${next.label}: ${next.remaining}s`;
+            }
+        }
+
+        function playAlertSound() {
+            // Simple Web Audio API beep alert
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(880, ctx.currentTime); // A5 tone
+                osc.connect(ctx.destination);
+                osc.start();
+                osc.stop(ctx.currentTime + 0.5);
+            } catch (e) {
+                console.log('Audio Context not allowed without interaction');
+            }
+        }
+
+        /* --- DASHBOARD & GOALS --- */
+        function updateDashboard() {
+            document.getElementById('stat-revenue').innerText = `$${dailyRevenue.toFixed(2)}`;
+            document.getElementById('stat-customers').innerText = totalCustomers;
+            document.getElementById('stat-tips').innerText = `$${dailyTips.toFixed(2)}`;
+            document.getElementById('stat-burgers').innerText = totalBurgersSold;
+
+            const progress = Math.min(100, (dailyRevenue / dailyGoal) * 100);
+            document.getElementById('goal-progress-bar').style.width = `${progress}%`;
+            document.getElementById('goal-percentage').innerText = `${Math.round(progress)}%`;
+        }
+
+        function nextDay() {
+            currentDay++;
+            dailyRevenue = 0;
+            dailyTips = 0;
+            totalCustomers = 0;
+            totalBurgersSold = 0;
+            updateDashboard();
+            updateHeaderDisplay();
+            saveToLocalStorage();
+            showToast(`Tag ${currentDay} gestartet!`, 'info');
+        }
+
+        function updateHeaderDisplay() {
+            document.getElementById('current-day-display').innerText = `Tag ${currentDay}`;
+            document.getElementById('daily-revenue-display').innerText = `$${dailyRevenue.toFixed(2)}`;
+        }
+
+        /* --- UPGRADES & NOTES --- */
+        function renderUpgrades() {
+            const container = document.getElementById('upgrades-list');
+            container.innerHTML = '';
+
+            upgrades.forEach(u => {
+                const card = document.createElement('div');
+                card.className = `bg-slate-900 border ${u.bought ? 'border-emerald-500/30 bg-emerald-950/10' : 'border-slate-800'} p-4 rounded-2xl flex justify-between items-center`;
+                card.innerHTML = `
+                    <div class="space-y-1">
+                        <div class="flex items-center space-x-2">
+                            <span class="font-bold text-sm text-slate-200">${u.name}</span>
+                            <span class="text-xs font-mono font-bold text-amber-400">$${u.price}</span>
+                        </div>
+                        <p class="text-xs text-slate-400">${u.desc}</p>
+                    </div>
+                    <button onclick="toggleUpgrade('${u.id}')" class="px-3 py-2 rounded-xl font-bold text-xs ${u.bought ? 'bg-emerald-600 text-white' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}">
+                        ${u.bought ? 'Freigeschaltet' : 'Kaufen'}
+                    </button>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function toggleUpgrade(id) {
+            const u = upgrades.find(x => x.id === id);
+            if (u) {
+                u.bought = !u.bought;
+                renderUpgrades();
+                saveToLocalStorage();
+            }
+        }
+
+        function saveNotes() {
+            const text = document.getElementById('custom-notes').value;
+            localStorage.setItem('ffs_companion_notes', text);
+        }
+
+        /* --- TOAST NOTIFICATIONS --- */
+        function showToast(msg, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            
+            let bg = 'bg-slate-800 text-slate-200 border-slate-700';
+            if (type === 'success') bg = 'bg-emerald-600 text-white border-emerald-500';
+            if (type === 'alert') bg = 'bg-red-600 text-white border-red-500 animate-bounce';
+
+            toast.className = `${bg} border px-4 py-3 rounded-xl text-xs font-bold shadow-xl transition-all duration-300`;
+            toast.innerText = msg;
+
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
+        }
+
+        /* --- LOCAL STORAGE SAVING --- */
+        function saveToLocalStorage() {
+            const state = {
+                currentDay,
+                dailyRevenue,
+                dailyTips,
+                totalCustomers,
+                totalBurgersSold,
+                inventory,
+                upgrades
+            };
+            localStorage.setItem('ffs_companion_state', JSON.stringify(state));
+        }
+
+        function loadFromLocalStorage() {
+            const savedState = localStorage.getItem('ffs_companion_state');
+            if (savedState) {
+                try {
+                    const data = JSON.parse(savedState);
+                    currentDay = data.currentDay || 1;
+                    dailyRevenue = data.dailyRevenue || 0;
+                    dailyTips = data.dailyTips || 0;
+                    totalCustomers = data.totalCustomers || 0;
+                    totalBurgersSold = data.totalBurgersSold || 0;
+                    if (data.inventory) inventory = data.inventory;
+                    if (data.upgrades) upgrades = data.upgrades;
+                } catch(e) {
+                    console.error('Could not parse saved state');
+                }
+            }
+
+            const savedNotes = localStorage.getItem('ffs_companion_notes');
+            if (savedNotes) {
+                document.getElementById('custom-notes').value = savedNotes;
+            }
+        }
+    </script>
+</body>
+</html>
