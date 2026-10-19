@@ -1,294 +1,940 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="de" class="dark h-full">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fast Food Simulator Companion</title>
+    <title>Fast Food Simulator - Companion App</title>
     <!-- PWA / Vollbild Meta-Tags -->
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#0f172a">
     <link rel="manifest" href="manifest.json">
-    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            red: '#EF4444',
+                            amber: '#F59E0B',
+                            yellow: '#FBBF24',
+                            dark: '#0F172A',
+                            card: '#1E293B',
+                            accent: '#10B981'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Custom scrollbar for tablet smooth scrolling */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569;
+        }
+        .touch-active:active {
+            transform: scale(0.97);
+        }
+    </style>
 </head>
-<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col font-sans select-none pb-20">
+<body class="bg-slate-950 text-slate-100 font-sans h-full flex flex-col select-none overflow-hidden">
 
-    <!-- Header -->
-    <header class="bg-slate-800 border-b border-slate-700 p-4 sticky top-0 z-50 shadow-md">
-        <div class="max-w-4xl mx-auto flex justify-between items-center">
-            <h1 class="text-lg font-bold tracking-wider text-amber-400">🍔 Fast Food Companion</h1>
-            <span class="text-xs bg-slate-700 px-2 py-1 rounded text-slate-300">Pro Edition</span>
+    <!-- Top Navigation Header -->
+    <header class="bg-slate-900 border-b border-slate-800 px-4 py-3 flex items-center justify-between shrink-0">
+        <div class="flex items-center space-x-3">
+            <div class="bg-amber-500 text-slate-950 p-2 rounded-xl font-black flex items-center justify-center text-xl shadow-lg shadow-amber-500/20">
+                <i class="fa-solid font-bold fa-burger"></i>
+            </div>
+            <div>
+                <h1 class="text-lg font-bold leading-tight text-amber-400">FFS Companion</h1>
+                <p class="text-xs text-slate-400">Fast Food Manager Tablet Tool</p>
+            </div>
         </div>
-        <!-- Navigation Tabs -->
-        <div class="max-w-4xl mx-auto flex space-x-1 mt-3 overflow-x-auto pb-1">
-            <button onclick="switchTab('inventory')" id="tab-inventory" class="tab-btn px-3 py-1.5 text-xs font-semibold rounded-lg bg-amber-600 text-white whitespace-nowrap transition">📦 Lager & Einkaufsliste</button>
-            <button onclick="switchTab('recipes')" id="tab-recipes" class="tab-btn px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-700 text-slate-300 whitespace-nowrap transition">📋 Rezepte</button>
-            <button onclick="switchTab('timer')" id="tab-timer" class="tab-btn px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-700 text-slate-300 whitespace-nowrap transition">⏱️ Fritteusen-Timer</button>
-            <button onclick="switchTab('shift')" id="tab-shift" class="tab-btn px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-700 text-slate-300 whitespace-nowrap transition">💰 Schicht & Check</button>
+
+        <!-- Quick Status & Day Info -->
+        <div class="flex items-center space-x-4">
+            <div class="bg-slate-800 border border-slate-700 px-3 py-1.5 rounded-xl flex items-center space-x-3">
+                <div class="text-xs">
+                    <span class="text-slate-400 block text-[10px] uppercase font-bold">Tag</span>
+                    <span id="current-day-display" class="font-bold text-amber-400">Tag 1</span>
+                </div>
+                <div class="h-6 w-px bg-slate-700"></div>
+                <div class="text-xs">
+                    <span class="text-slate-400 block text-[10px] uppercase font-bold">Tagesumsatz</span>
+                    <span id="daily-revenue-display" class="font-bold text-emerald-400">$0.00</span>
+                </div>
+            </div>
+            <button onclick="nextDay()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-3 py-2 rounded-xl text-xs flex items-center space-x-1 transition touch-active">
+                <i class="fa-solid fa-sun"></i>
+                <span class="hidden sm:inline">Neuer Tag</span>
+            </button>
         </div>
     </header>
 
-    <!-- Main Content -->
-    <main class="max-w-4xl mx-auto p-4 flex-grow w-full">
-        
-        <!-- SEKTION 1: Lagerbestand & Einkaufsliste -->
-        <div id="section-inventory" class="space-y-6">
-            <!-- Lagerbestand -->
-            <section class="bg-slate-800 rounded-xl p-4 shadow-lg border border-slate-700">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-base font-semibold text-amber-300">📦 Lagerbestand Tracker</h2>
-                    <button onclick="resetInventory()" class="text-xs bg-rose-600 hover:bg-rose-700 text-white px-2.5 py-1 rounded transition">Reset</button>
-                </div>
-                <div id="inventory-grid" class="grid grid-cols-1 md:grid-cols-2 gap-3"></div>
-            </section>
+    <!-- Main Content Area with Navigation Sidebar -->
+    <div class="flex flex-1 overflow-hidden relative">
 
-            <!-- Automatische Einkaufsliste -->
-            <section class="bg-slate-800 rounded-xl p-4 shadow-lg border border-slate-700">
-                <h2 class="text-base font-semibold text-amber-300 mb-2">🛒 Automatische Einkaufsliste</h2>
-                <p class="text-xs text-slate-400 mb-3">Artikel, deren Bestand unter 3 Stück gefallen ist:</p>
-                <div id="shopping-list" class="bg-slate-900/60 p-3 rounded-lg border border-slate-700 text-sm text-slate-300">
-                    <!-- Dynamisch -->
-                </div>
-            </section>
-        </div>
+        <!-- Navigation Bar (Tablet Optimized - Large Icons/Buttons) -->
+        <nav class="bg-slate-900 border-r border-slate-800 w-20 md:w-56 p-2 flex flex-col justify-between shrink-0">
+            <div class="space-y-1.5">
+                <button onclick="switchTab('cashier')" id="nav-cashier" class="nav-btn active w-full flex items-center space-x-3 px-3 py-3 rounded-xl transition text-left text-slate-400 hover:bg-slate-800">
+                    <i class="fa-solid fa-cash-register text-xl text-amber-400 w-6 text-center"></i>
+                    <span class="font-semibold text-sm hidden md:inline">Kasse & Rechner</span>
+                </button>
+                <button onclick="switchTab('recipes')" id="nav-recipes" class="nav-btn w-full flex items-center space-x-3 px-3 py-3 rounded-xl transition text-left text-slate-400 hover:bg-slate-800">
+                    <i class="fa-solid fa-book-open text-xl text-red-400 w-6 text-center"></i>
+                    <span class="font-semibold text-sm hidden md:inline">Rezepte & Menü</span>
+                </button>
+                <button onclick="switchTab('inventory')" id="nav-inventory" class="nav-btn w-full flex items-center space-x-3 px-3 py-3 rounded-xl transition text-left text-slate-400 hover:bg-slate-800">
+                    <i class="fa-solid fa-boxes-stacked text-xl text-blue-400 w-6 text-center"></i>
+                    <span class="font-semibold text-sm hidden md:inline">Lager & Bestand</span>
+                </button>
+                <button onclick="switchTab('timers')" id="nav-timers" class="nav-btn w-full flex items-center space-x-3 px-3 py-3 rounded-xl transition text-left text-slate-400 hover:bg-slate-800">
+                    <i class="fa-solid fa-stopwatch text-xl text-emerald-400 w-6 text-center"></i>
+                    <span class="font-semibold text-sm hidden md:inline">Küchen-Timer</span>
+                </button>
+                <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-btn w-full flex items-center space-x-3 px-3 py-3 rounded-xl transition text-left text-slate-400 hover:bg-slate-800">
+                    <i class="fa-solid fa-chart-line text-xl text-purple-400 w-6 text-center"></i>
+                    <span class="font-semibold text-sm hidden md:inline">Statistik & Ziele</span>
+                </button>
+                <button onclick="switchTab('upgrades')" id="nav-upgrades" class="nav-btn w-full flex items-center space-x-3 px-3 py-3 rounded-xl transition text-left text-slate-400 hover:bg-slate-800">
+                    <i class="fa-solid fa-wrench text-xl text-orange-400 w-6 text-center"></i>
+                    <span class="font-semibold text-sm hidden md:inline">Upgrades & Notizen</span>
+                </button>
+            </div>
 
-        <!-- SEKTION 2: Rezepte -->
-        <div id="section-recipes" class="hidden space-y-4">
-            <section class="bg-slate-800 rounded-xl p-4 shadow-lg border border-slate-700">
-                <h2 class="text-base font-semibold text-amber-300 mb-3">📋 Rezept-Spickzettel</h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
-                    <div class="bg-slate-700/50 p-3 rounded-lg border border-slate-600">
-                        <h3 class="font-bold text-amber-400 mb-1">Standard Burger</h3>
-                        <p class="text-xs text-slate-300">1x Brötchen &bull; 1x Rindfleisch-Patty &bull; Ketchup &bull; Salat &bull; Zwiebeln</p>
-                    </div>
-                    <div class="bg-slate-700/50 p-3 rounded-lg border border-slate-600">
-                        <h3 class="font-bold text-amber-400 mb-1">Cheeseburger</h3>
-                        <p class="text-xs text-slate-300">1x Brötchen &bull; 1x Rindfleisch-Patty &bull; Cheddar-Käse &bull; Gewürzgurken &bull; Senf</p>
-                    </div>
-                    <div class="bg-slate-700/50 p-3 rounded-lg border border-slate-600">
-                        <h3 class="font-bold text-amber-400 mb-1">Bacon Burger</h3>
-                        <p class="text-xs text-slate-300">1x Brötchen &bull; 1x Rindfleisch-Patty &bull; Cheddar-Käse &bull; Mayonnaise &bull; Tomaten</p>
-                    </div>
-                    <div class="bg-slate-700/50 p-3 rounded-lg border border-slate-600">
-                        <h3 class="font-bold text-amber-400 mb-1">Chicken Burger</h3>
-                        <p class="text-xs text-slate-300">1x Brötchen &bull; 1x Hähnchen-Patty &bull; Salat &bull; Mayonnaise</p>
-                    </div>
-                </div>
-            </section>
-        </div>
+            <!-- Quick Timer Mini-Display in Sidebar -->
+            <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 text-center hidden md:block">
+                <span class="text-[10px] text-slate-400 uppercase font-bold block mb-1">Aktiver Timer</span>
+                <div id="mini-timer-display" class="font-mono text-xs text-amber-400">Kein Timer aktiv</div>
+            </div>
+        </nav>
 
-        <!-- SEKTION 3: Timer -->
-        <div id="section-timer" class="hidden space-y-4">
-            <section class="bg-slate-800 rounded-xl p-4 shadow-lg border border-slate-700">
-                <h2 class="text-base font-semibold text-amber-300 mb-3">⏱️ Fritteusen- & Koch-Timer</h2>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
-                    <div class="bg-slate-700/50 p-4 rounded-lg border border-slate-600 text-center flex flex-col justify-between">
-                        <div>
-                            <h3 class="font-bold text-white mb-1">Pommes / Nuggets</h3>
-                            <div id="timer-display-1" class="text-2xl font-mono font-bold text-amber-400 my-2">00:45</div>
+        <!-- Main View Containers -->
+        <main class="flex-1 overflow-y-auto p-4 md:p-6 bg-slate-950">
+
+            <!-- TAB 1: KASSE & RECHNER -->
+            <section id="tab-cashier" class="tab-content space-y-6">
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                    
+                    <!-- Left Column: Quick Order Selection -->
+                    <div class="lg:col-span-7 space-y-4">
+                        <div class="flex items-center justify-between">
+                            <h2 class="text-lg font-bold text-slate-100 flex items-center gap-2">
+                                <i class="fa-solid fa-cart-plus text-amber-400"></i> Bestellauswahl
+                            </h2>
+                            <button onclick="clearCurrentOrder()" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-lg border border-slate-700">
+                                Auswählen zurücksetzen
+                            </button>
                         </div>
-                        <button onclick="startTimer(1, 45)" class="w-full bg-amber-600 hover:bg-amber-500 py-2 rounded font-semibold text-sm transition">Start (45s)</button>
-                    </div>
-                    <div class="bg-slate-700/50 p-4 rounded-lg border border-slate-600 text-center flex flex-col justify-between">
-                        <div>
-                            <h3 class="font-bold text-white mb-1">Burger Patty</h3>
-                            <div id="timer-display-2" class="text-2xl font-mono font-bold text-amber-400 my-2">00:30</div>
+
+                        <!-- Category Selector -->
+                        <div class="grid grid-cols-3 gap-2">
+                            <button onclick="renderMenuCategory('burgers')" class="bg-slate-900 border border-slate-800 hover:border-amber-500/50 p-3 rounded-xl text-center touch-active">
+                                <i class="fa-solid fa-burger text-amber-400 text-xl block mb-1"></i>
+                                <span class="text-xs font-semibold">Burger</span>
+                            </button>
+                            <button onclick="renderMenuCategory('sides')" class="bg-slate-900 border border-slate-800 hover:border-amber-500/50 p-3 rounded-xl text-center touch-active">
+                                <i class="fa-solid fa-box-archive text-amber-400 text-xl block mb-1"></i>
+                                <span class="text-xs font-semibold">Beilagen</span>
+                            </button>
+                            <button onclick="renderMenuCategory('drinks')" class="bg-slate-900 border border-slate-800 hover:border-amber-500/50 p-3 rounded-xl text-center touch-active">
+                                <i class="fa-solid fa-wine-glass text-amber-400 text-xl block mb-1"></i>
+                                <span class="text-xs font-semibold">Getränke</span>
+                            </button>
                         </div>
-                        <button onclick="startTimer(2, 30)" class="w-full bg-amber-600 hover:bg-amber-500 py-2 rounded font-semibold text-sm transition">Start (30s)</button>
-                    </div>
-                    <div class="bg-slate-700/50 p-4 rounded-lg border border-slate-600 text-center flex flex-col justify-between">
-                        <div>
-                            <h3 class="font-bold text-white mb-1">Hähnchen-Patty</h3>
-                            <div id="timer-display-3" class="text-2xl font-mono font-bold text-amber-400 my-2">01:00</div>
+
+                        <!-- Menu Items Grid -->
+                        <div id="cashier-menu-grid" class="grid grid-cols-2 sm:grid-cols-3 gap-3 max-h-[360px] overflow-y-auto pr-1">
+                            <!-- Items populated via JS -->
                         </div>
-                        <button onclick="startTimer(3, 60)" class="w-full bg-amber-600 hover:bg-amber-500 py-2 rounded font-semibold text-sm transition">Start (60s)</button>
+                    </div>
+
+                    <!-- Right Column: Active Order & Change Calculator -->
+                    <div class="lg:col-span-5 space-y-4">
+                        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-4 shadow-xl">
+                            <h2 class="text-md font-bold text-slate-100 flex items-center justify-between border-b border-slate-800 pb-3">
+                                <span><i class="fa-solid fa-receipt text-amber-400 mr-2"></i>Aktuelle Bestellung</span>
+                                <span id="order-item-count" class="text-xs bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded-full">0 Artikel</span>
+                            </h2>
+
+                            <!-- Order List -->
+                            <div id="active-order-list" class="space-y-2 max-h-48 overflow-y-auto pr-1 text-sm min-h-[100px]">
+                                <div class="text-slate-500 text-center py-6 text-xs italic">Klicke Artikel links an, um sie zur Bestellung hinzuzufügen.</div>
+                            </div>
+
+                            <!-- Totals & Cashier Helper -->
+                            <div class="border-t border-slate-800 pt-3 space-y-3">
+                                <div class="flex justify-between items-center text-lg font-bold">
+                                    <span class="text-slate-300">Gesamtsumme:</span>
+                                    <span id="order-total-price" class="text-amber-400 text-xl">$0.00</span>
+                                </div>
+
+                                <!-- Change Calculator -->
+                                <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 space-y-2">
+                                    <label class="text-xs font-semibold text-slate-400 block">Kunde gibt (Bargeld):</label>
+                                    <div class="flex gap-2">
+                                        <input type="number" id="cash-given-input" step="0.5" placeholder="0.00" oninput="calculateChange()" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-3 py-2 text-slate-100 font-mono text-lg focus:outline-none focus:border-amber-500">
+                                        <button onclick="setExactCash()" class="bg-slate-800 hover:bg-slate-700 text-xs px-3 rounded-lg text-slate-300 font-medium">Passend</button>
+                                    </div>
+
+                                    <div class="flex justify-between items-center pt-2 border-t border-slate-800">
+                                        <span class="text-xs font-semibold text-slate-400">Rückgeld:</span>
+                                        <span id="change-due-display" class="font-mono text-lg font-bold text-emerald-400">$0.00</span>
+                                    </div>
+                                </div>
+
+                                <!-- Action Buttons -->
+                                <div class="grid grid-cols-2 gap-2 pt-2">
+                                    <button onclick="completeOrder()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl text-center text-sm transition touch-active shadow-lg shadow-emerald-600/20">
+                                        <i class="fa-solid fa-check mr-1"></i> Abschließen
+                                    </button>
+                                    <button onclick="addOrderToQueue()" class="bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold py-3 rounded-xl text-center text-sm transition touch-active">
+                                        <i class="fa-solid fa-clock mr-1"></i> In Warteschlange
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Orders Queue Section -->
+                        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3">
+                            <h3 class="text-sm font-bold text-slate-300 flex items-center justify-between">
+                                <span><i class="fa-solid fa-users text-amber-400 mr-2"></i>Warteschlange</span>
+                                <span id="queue-count" class="text-xs text-slate-400">0 Bestellungen</span>
+                            </h3>
+                            <div id="order-queue-list" class="space-y-2 max-h-36 overflow-y-auto">
+                                <div class="text-xs text-slate-500 text-center py-2">Keine wartenden Bestellungen</div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </section>
-        </div>
 
-        <!-- SEKTION 4: Schicht & Checkliste -->
-        <div id="section-shift" class="hidden space-y-4">
-            <!-- Schicht-Rechner -->
-            <section class="bg-slate-800 rounded-xl p-4 shadow-lg border border-slate-700">
-                <h2 class="text-base font-semibold text-amber-300 mb-3">💰 Schicht-Kasse & Einnahmen</h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+            <!-- TAB 2: REZEPTE & MENÜ -->
+            <section id="tab-recipes" class="tab-content hidden space-y-4">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                    <h2 class="text-lg font-bold text-slate-100 flex items-center gap-2">
+                        <i class="fa-solid fa-book-open text-red-400"></i> Rezept- & Menüreferenz
+                    </h2>
+                    <input type="text" id="recipe-search" oninput="filterRecipes()" placeholder="Rezept oder Zutat suchen..." class="bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-200 w-full sm:w-64 focus:outline-none focus:border-red-500">
+                </div>
+
+                <div id="recipes-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <!-- Recipes loaded via JS -->
+                </div>
+            </section>
+
+            <!-- TAB 3: LAGER & BESTAND -->
+            <section id="tab-inventory" class="tab-content hidden space-y-6">
+                <div class="flex justify-between items-center">
                     <div>
-                        <label class="block text-xs text-slate-400 mb-1">Einnahmen heute ($):</label>
-                        <input type="number" id="shift-income" placeholder="0" oninput="saveShiftData()" class="w-full bg-slate-900 border border-slate-600 rounded p-2 text-amber-400 font-bold">
+                        <h2 class="text-lg font-bold text-slate-100 flex items-center gap-2">
+                            <i class="fa-solid fa-boxes-stacked text-blue-400"></i> Lagerbestand Tracker
+                        </h2>
+                        <p class="text-xs text-slate-400">Verfolge deinen Vorrat & erstelle Nachbestellungen</p>
                     </div>
-                    <div>
-                        <label class="block text-xs text-slate-400 mb-1">Materialkosten ($):</label>
-                        <input type="number" id="shift-expenses" placeholder="0" oninput="saveShiftData()" class="w-full bg-slate-900 border border-slate-600 rounded p-2 text-rose-400 font-bold">
-                    </div>
+                    <button onclick="resetInventoryToDefault()" class="text-xs bg-slate-900 border border-slate-800 text-slate-400 px-3 py-2 rounded-xl hover:text-slate-200">
+                        Auffüllen (Standard)
+                    </button>
                 </div>
-                <div class="mt-4 p-3 bg-slate-900/60 rounded-lg border border-slate-700 flex justify-between items-center">
-                    <span class="text-sm font-medium">Nettogewinn Schicht:</span>
-                    <span id="shift-profit" class="text-lg font-bold text-emerald-400">$0</span>
+
+                <div id="inventory-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <!-- Stock Cards populated via JS -->
+                </div>
+
+                <!-- Shopping / Restock Reminder -->
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3">
+                    <h3 class="text-sm font-bold text-amber-400 flex items-center gap-2">
+                        <i class="fa-solid fa-triangle-exclamation"></i> Niedriger Bestand Warnungen
+                    </h3>
+                    <div id="low-stock-list" class="flex flex-wrap gap-2">
+                        <!-- Populated dynamically -->
+                    </div>
                 </div>
             </section>
 
-            <!-- Schichtende Checkliste -->
-            <section class="bg-slate-800 rounded-xl p-4 shadow-lg border border-slate-700">
-                <h2 class="text-base font-semibold text-amber-300 mb-2">🧼 Checkliste für Schichtende</h2>
-                <p class="text-xs text-slate-400 mb-3">Erledige diese Aufgaben vor dem Feierabend:</p>
-                <div class="space-y-2 text-sm">
-                    <label class="flex items-center space-x-3 bg-slate-700/40 p-2.5 rounded-lg border border-slate-600/60 cursor-pointer">
-                        <input type="checkbox" class="w-4 h-4 accent-amber-500 rounded">
-                        <span>Müllbeutel entsorgen & wechseln</span>
-                    </label>
-                    <label class="flex items-center space-x-3 bg-slate-700/40 p-2.5 rounded-lg border border-slate-600/60 cursor-pointer">
-                        <input type="checkbox" class="w-4 h-4 accent-amber-500 rounded">
-                        <span>Frittieröl wechseln (falls nötig)</span>
-                    </label>
-                    <label class="flex items-center space-x-3 bg-slate-700/40 p-2.5 rounded-lg border border-slate-600/60 cursor-pointer">
-                        <input type="checkbox" class="w-4 h-4 accent-amber-500 rounded">
-                        <span>Tische und Boden reinigen</span>
-                    </label>
-                    <label class="flex items-center space-x-3 bg-slate-700/40 p-2.5 rounded-lg border border-slate-600/60 cursor-pointer">
-                        <input type="checkbox" class="w-4 h-4 accent-amber-500 rounded">
-                        <span>Lagerbestand für nächste Schicht prüfen</span>
-                    </label>
+            <!-- TAB 4: KÜCHEN-TIMER -->
+            <section id="tab-timers" class="tab-content hidden space-y-6">
+                <div>
+                    <h2 class="text-lg font-bold text-slate-100 flex items-center gap-2">
+                        <i class="fa-solid fa-stopwatch text-emerald-400"></i> Multi-Küche Timer
+                    </h2>
+                    <p class="text-xs text-slate-400">Stelle Schnelltimer fürs Grillen, Frittieren und Nachfüllen</p>
+                </div>
+
+                <!-- Quick Preset Timer Buttons -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <button onclick="startCustomTimer('Patty Grillen', 25)" class="bg-slate-900 border border-slate-800 hover:border-emerald-500/50 p-3 rounded-xl text-center touch-active">
+                        <i class="fa-solid fa-fire text-amber-500 text-xl block mb-1"></i>
+                        <span class="text-xs font-bold block">Patty Grillen</span>
+                        <span class="text-[10px] text-slate-400">25 Sek.</span>
+                    </button>
+                    <button onclick="startCustomTimer('Pommes Frittieren', 35)" class="bg-slate-900 border border-slate-800 hover:border-emerald-500/50 p-3 rounded-xl text-center touch-active">
+                        <i class="fa-solid fa-box text-yellow-500 text-xl block mb-1"></i>
+                        <span class="text-xs font-bold block">Pommes Frittieren</span>
+                        <span class="text-[10px] text-slate-400">35 Sek.</span>
+                    </button>
+                    <button onclick="startCustomTimer('Getränke Nachfüllen', 15)" class="bg-slate-900 border border-slate-800 hover:border-emerald-500/50 p-3 rounded-xl text-center touch-active">
+                        <i class="fa-solid fa-glass-water text-blue-400 text-xl block mb-1"></i>
+                        <span class="text-xs font-bold block">Getränke Nachfüllen</span>
+                        <span class="text-[10px] text-slate-400">15 Sek.</span>
+                    </button>
+                    <button onclick="startCustomTimer('Putz / Restock', 60)" class="bg-slate-900 border border-slate-800 hover:border-emerald-500/50 p-3 rounded-xl text-center touch-active">
+                        <i class="fa-solid fa-broom text-purple-400 text-xl block mb-1"></i>
+                        <span class="text-xs font-bold block">Reinigen / Lager</span>
+                        <span class="text-[10px] text-slate-400">60 Sek.</span>
+                    </button>
+                </div>
+
+                <!-- Active Timers Container -->
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-4">
+                    <h3 class="text-sm font-bold text-slate-200">Laufende Timer</h3>
+                    <div id="active-timers-container" class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div class="text-slate-500 text-xs text-center py-6 col-span-2">Keine aktiven Timer. Nutze die Buttons oben, um einen Timer zu starten.</div>
+                    </div>
                 </div>
             </section>
-        </div>
 
-    </main>
+            <!-- TAB 5: STATISTIK & ZIELE -->
+            <section id="tab-dashboard" class="tab-content hidden space-y-6">
+                <div>
+                    <h2 class="text-lg font-bold text-slate-100 flex items-center gap-2">
+                        <i class="fa-solid fa-chart-line text-purple-400"></i> Tagesübersicht & Performance
+                    </h2>
+                    <p class="text-xs text-slate-400">Verfolge Einnahmen, Trinkgelder und Tagesziele</p>
+                </div>
 
-    <!-- Footer -->
-    <footer class="bg-slate-800 border-t border-slate-700 text-center py-3 text-xs text-slate-400 fixed bottom-0 left-0 right-0">
-        Fast Food Simulator Companion App &bull; Alle Funktionen aktiv
-    </footer>
+                <!-- Summary Cards -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl">
+                        <span class="text-xs text-slate-400 font-medium block mb-1">Tagesumsatz</span>
+                        <span id="stat-revenue" class="text-xl font-bold text-emerald-400 font-mono">$0.00</span>
+                    </div>
+                    <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl">
+                        <span class="text-xs text-slate-400 font-medium block mb-1">Bediente Kunden</span>
+                        <span id="stat-customers" class="text-xl font-bold text-amber-400 font-mono">0</span>
+                    </div>
+                    <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl">
+                        <span class="text-xs text-slate-400 font-medium block mb-1">Trinkgeld GESAMT</span>
+                        <span id="stat-tips" class="text-xl font-bold text-blue-400 font-mono">$0.00</span>
+                    </div>
+                    <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl">
+                        <span class="text-xs text-slate-400 font-medium block mb-1">Verkaufte Burger</span>
+                        <span id="stat-burgers" class="text-xl font-bold text-red-400 font-mono">0</span>
+                    </div>
+                </div>
 
-    <!-- JavaScript Logik -->
+                <!-- Daily Target Goal Progress -->
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-sm font-bold text-slate-200">Tagesziel-Fortschritt ($500.00)</h3>
+                        <span id="goal-percentage" class="text-xs font-bold text-amber-400">0%</span>
+                    </div>
+                    <div class="w-full bg-slate-950 h-3 rounded-full overflow-hidden border border-slate-800">
+                        <div id="goal-progress-bar" class="bg-gradient-to-r from-amber-500 to-emerald-500 h-full w-0 transition-all duration-500"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 6: UPGRADES & NOTIZEN -->
+            <section id="tab-upgrades" class="tab-content hidden space-y-6">
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                    
+                    <!-- Upgrades Tracker -->
+                    <div class="lg:col-span-7 space-y-4">
+                        <h2 class="text-lg font-bold text-slate-100 flex items-center gap-2">
+                            <i class="fa-solid fa-wrench text-orange-400"></i> Freischaltbare Upgrades & Geräte
+                        </h2>
+                        <div id="upgrades-list" class="space-y-3">
+                            <!-- Populated via JS -->
+                        </div>
+                    </div>
+
+                    <!-- Custom Quick Notes -->
+                    <div class="lg:col-span-5 space-y-4">
+                        <h2 class="text-lg font-bold text-slate-100 flex items-center gap-2">
+                            <i class="fa-solid fa-note-sticky text-yellow-400"></i> Notizen & Erinnerungen
+                        </h2>
+                        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3">
+                            <textarea id="custom-notes" oninput="saveNotes()" rows="10" placeholder="Schreibe hier Notizen für deine Spiel-Session... (z.B. Nächstes Ziel: Zweiter Grill für $800 kaufen)" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm text-slate-200 focus:outline-none focus:border-amber-500 resize-none font-sans"></textarea>
+                            <span class="text-[10px] text-slate-500 block text-right">Wird automatisch gespeichert</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <!-- Notification Toast Container -->
+    <div id="toast-container" class="fixed bottom-4 right-4 z-50 space-y-2 pointer-events-none"></div>
+
     <script>
-        const items = [
-            "Burger-Einschlagpapier", "Gefrorene Rindefleisch-Patty", "Burger-Brötchen", "Müllbeutel", 
-            "Ketchup", "Mr. Hoop", "Youma Berry", "Youma", "Light Splash Cola", "Splash Cola", 
-            "Salat", "Mayonnaise", "Gewürzgurken", "Eisbecher", "Zwiebeln", "Tomaten", 
-            "Papiertüten", "Frittieröl", "Pommesbecher (Klein)", "Pommesbecher (Mittel)", 
-            "Pommesbecher (Groß)", "Gefrorene Pommes", "Senf", "Gefrorene Hähnchen-Patty", 
-            "Kaffee", "Kaffeebecher", "Milch", "Cheddar-Käse", "Nugget-Boxen", "Gefrorene Chicken Nugget"
+        /* --- APPLICATION DATA STRUCTURES --- */
+
+        // Recipe & Menu Database
+        const menuData = {
+            burgers: [
+                { id: 'b1', name: 'Standard Burger', price: 5.50, ingredients: ['Burger Brötchen', 'Gefrorene Rindefleisch-Patty', 'Salat'], icon: 'fa-burger' },
+                { id: 'b2', name: 'Cheeseburger', price: 6.50, ingredients: ['Burger Brötchen', 'Gefrorene Rindefleisch-Patty', 'Cheddar-Käse', 'Salat'], icon: 'fa-burger' },
+                { id: 'b3', name: 'Doppel Cheeseburger', price: 8.50, ingredients: ['Burger Brötchen', '2x Gefrorene Rindefleisch-Patty', '2x Cheddar-Käse', 'Mayonnaise'], icon: 'fa-burger' },
+                { id: 'b4', name: 'Bacon Deluxe', price: 9.00, ingredients: ['Burger Brötchen', 'Gefrorene Rindefleisch-Patty', 'Cheddar-Käse', 'Gewürzgurken', 'Ketchup'], icon: 'fa-burger' }
+            ],
+            sides: [
+                { id: 's1', name: 'Pommes (Klein)', price: 2.50, ingredients: ['Gefrorene Pommes', 'Pommesbecher (Klein)', 'Frittieröl'], icon: 'fa-box-archive' },
+                { id: 's2', name: 'Pommes (Mittel)', price: 3.00, ingredients: ['Gefrorene Pommes', 'Pommesbecher (Mittel)', 'Frittieröl'], icon: 'fa-box-archive' },
+                { id: 's3', name: 'Pommes (Groß)', price: 3.50, ingredients: ['Gefrorene Pommes', 'Pommesbecher (Groß)', 'Frittieröl'], icon: 'fa-box-archive' },
+                { id: 's4', name: 'Chicken Nuggets', price: 4.00, ingredients: ['Gefrorene Chicken Nugget', 'Nugget-Boxen', 'Frittieröl'], icon: 'fa-box-archive' }
+            ],
+            drinks: [
+                { id: 'd1', name: 'Splash Cola', price: 2.00, ingredients: ['Splash Cola', 'Eisbecher'], icon: 'fa-wine-glass' },
+                { id: 'd2', name: 'Light Splash Cola', price: 2.00, ingredients: ['Light Splash Cola', 'Eisbecher'], icon: 'fa-wine-glass' },
+                { id: 'd3', name: 'Mr. Hoop / Youma', price: 2.50, ingredients: ['Mr. Hoop', 'Eisbecher'], icon: 'fa-glass-water' }
+            ]
+        };
+
+        // Inventory Initial Items (Dein vollständiger Katalog aller 30 Materialien)
+        let inventory = [
+            { id: 'i1', name: 'Burger-Einschlagpapier', qty: 40, max: 100, minAlert: 5, unit: 'Stück' },
+            { id: 'i2', name: 'Gefrorene Rindefleisch-Patty', qty: 35, max: 100, minAlert: 5, unit: 'Stück' },
+            { id: 'i3', name: 'Burger-Brötchen', qty: 40, max: 100, minAlert: 5, unit: 'Stück' },
+            { id: 'i4', name: 'Müllbeutel', qty: 10, max: 30, minAlert: 2, unit: 'Stück' },
+            { id: 'i5', name: 'Ketchup', qty: 8, max: 20, minAlert: 2, unit: 'Flaschen' },
+            { id: 'i6', name: 'Mr. Hoop', qty: 15, max: 40, minAlert: 5, unit: 'Dosen/Flaschen' },
+            { id: 'i7', name: 'Youma Berry', qty: 15, max: 40, minAlert: 5, unit: 'Dosen/Flaschen' },
+            { id: 'i8', name: 'Youma', qty: 15, max: 40, minAlert: 5, unit: 'Dosen/Flaschen' },
+            { id: 'i9', name: 'Light Splash Cola', qty: 15, max: 40, minAlert: 5, unit: 'Dosen/Flaschen' },
+            { id: 'i10', name: 'Splash Cola', qty: 15, max: 40, minAlert: 5, unit: 'Dosen/Flaschen' },
+            { id: 'i11', name: 'Salat', qty: 25, max: 60, minAlert: 5, unit: 'Portionen' },
+            { id: 'i12', name: 'Mayonnaise', qty: 8, max: 20, minAlert: 2, unit: 'Flaschen' },
+            { id: 'i13', name: 'Gewürzgurken', qty: 20, max: 50, minAlert: 5, unit: 'Gläser/Portionen' },
+            { id: 'i14', name: 'Eisbecher', qty: 50, max: 100, minAlert: 10, unit: 'Stück' },
+            { id: 'i15', name: 'Zwiebeln', qty: 20, max: 50, minAlert: 5, unit: 'Portionen' },
+            { id: 'i16', name: 'Tomaten', qty: 20, max: 50, minAlert: 5, unit: 'Portionen' },
+            { id: 'i17', name: 'Papiertüten', qty: 40, max: 100, minAlert: 10, unit: 'Stück' },
+            { id: 'i18', name: 'Frittieröl', qty: 5, max: 15, minAlert: 2, unit: 'Kanister' },
+            { id: 'i19', name: 'Pommesbecher (Klein)', qty: 30, max: 80, minAlert: 5, unit: 'Stück' },
+            { id: 'i20', name: 'Pommesbecher (Mittel)', qty: 30, max: 80, minAlert: 5, unit: 'Stück' },
+            { id: 'i21', name: 'Pommesbecher (Groß)', qty: 30, max: 80, minAlert: 5, unit: 'Stück' },
+            { id: 'i22', name: 'Gefrorene Pommes', qty: 40, max: 100, minAlert: 10, unit: 'Portionen' },
+            { id: 'i23', name: 'Senf', qty: 8, max: 20, minAlert: 2, unit: 'Flaschen' },
+            { id: 'i24', name: 'Gefrorene Hähnchen-Patty', qty: 25, max: 60, minAlert: 5, unit: 'Stück' },
+            { id: 'i25', name: 'Kaffee', qty: 20, max: 50, minAlert: 5, unit: 'Portionen' },
+            { id: 'i26', name: 'Kaffeebecher', qty: 40, max: 100, minAlert: 10, unit: 'Stück' },
+            { id: 'i27', name: 'Milch', qty: 10, max: 30, minAlert: 3, unit: 'Packungen' },
+            { id: 'i28', name: 'Cheddar-Käse', qty: 40, max: 100, minAlert: 10, unit: 'Scheiben' },
+            { id: 'i29', name: 'Nugget-Boxen', qty: 30, max: 80, minAlert: 5, unit: 'Stück' },
+            { id: 'i30', name: 'Gefrorene Chicken Nugget', qty: 40, max: 100, minAlert: 10, unit: 'Portionen' }
         ];
 
-        // Tabs umschalten
+        // Upgrades List
+        let upgrades = [
+            { id: 'u1', name: 'Zweiter Grill', price: 500, bought: false, desc: 'Ermöglicht das zeitgleiche Braten von 4 weiteren Patties.' },
+            { id: 'u2', name: 'Doppel-Fritteuse', price: 400, bought: false, desc: 'Verdoppelt die Frittierkapazität für Pommes.' },
+            { id: 'u3', name: 'Automatische Getränkestation', price: 750, bought: false, desc: 'Befüllt Getränke doppelt so schnell.' },
+            { id: 'u4', name: 'Erweiterter Lagerraum', price: 1000, bought: false, desc: 'Erhöht die maximale Lagerkapazität aller Zutaten.' }
+        ];
+
+        // App State
+        let currentDay = 1;
+        let dailyRevenue = 0.0;
+        let dailyTips = 0.0;
+        let totalCustomers = 0;
+        let totalBurgersSold = 0;
+        let activeOrder = [];
+        let orderQueue = [];
+        let activeTimers = [];
+        let dailyGoal = 500.0;
+
+        /* --- INITIALIZATION --- */
+        window.onload = function() {
+            loadFromLocalStorage();
+            renderMenuCategory('burgers');
+            renderRecipes();
+            renderInventory();
+            renderUpgrades();
+            updateDashboard();
+            updateHeaderDisplay();
+        };
+
+        /* --- TAB NAVIGATION --- */
         function switchTab(tabId) {
-            document.querySelectorAll('[id^="section-"]').forEach(el => el.classList.add('hidden'));
-            document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.classList.remove('bg-amber-600', 'text-white');
-                btn.classList.add('bg-slate-700', 'text-slate-300');
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.querySelectorAll('.nav-btn').forEach(el => {
+                el.classList.remove('bg-slate-800', 'text-amber-400');
+                el.classList.add('text-slate-400');
             });
-            document.getElementById('section-' + tabId).classList.remove('hidden');
-            const activeBtn = document.getElementById('tab-' + tabId);
-            activeBtn.classList.remove('bg-slate-700', 'text-slate-300');
-            activeBtn.classList.add('bg-amber-600', 'text-white');
+
+            document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+            const activeBtn = document.getElementById(`nav-${tabId}`);
+            activeBtn.classList.add('bg-slate-800', 'text-amber-400');
+            activeBtn.classList.remove('text-slate-400');
         }
 
-        // Lagerbestand Logic
-        function getInventoryData() {
-            const data = localStorage.getItem('ffs_inventory');
-            return data ? JSON.parse(data) : {};
-        }
+        /* --- CASHIER & ORDER CALCULATOR --- */
+        let currentCategory = 'burgers';
 
-        function saveInventoryData(data) {
-            localStorage.setItem('ffs_inventory', JSON.stringify(data));
-            updateShoppingList(data);
-        }
+        function renderMenuCategory(cat) {
+            currentCategory = cat;
+            const container = document.getElementById('cashier-menu-grid');
+            container.innerHTML = '';
 
-        function renderInventory() {
-            const grid = document.getElementById('inventory-grid');
-            const data = getInventoryData();
-            grid.innerHTML = '';
-
-            items.forEach((item, index) => {
-                const count = data[item] !== undefined ? data[item] : 0;
-                const card = document.createElement('div');
-                card.className = "bg-slate-700/50 border border-slate-600/60 p-2.5 rounded-lg flex items-center justify-between shadow-sm";
+            menuData[cat].forEach(item => {
+                const card = document.createElement('button');
+                card.onclick = () => addToOrder(item);
+                card.className = 'bg-slate-900 border border-slate-800 hover:border-amber-500 p-3 rounded-xl text-left flex flex-col justify-between transition touch-active';
                 card.innerHTML = `
-                    <span class="text-xs font-medium text-slate-200 pr-2">${item}</span>
-                    <div class="flex items-center space-x-1.5">
-                        <button onclick="updateCount('${item}', -1)" class="w-8 h-8 bg-slate-600 hover:bg-slate-500 text-white font-bold rounded flex items-center justify-center text-base">-</button>
-                        <span class="w-8 text-center font-semibold text-amber-400 text-sm">${count}</span>
-                        <button onclick="updateCount('${item}', 1)" class="w-8 h-8 bg-amber-600 hover:bg-amber-500 text-white font-bold rounded flex items-center justify-center text-base">+</button>
+                    <div class="flex items-center space-x-2 mb-2">
+                        <i class="fa-solid ${item.icon} text-amber-400 text-lg"></i>
+                        <span class="text-xs font-bold text-slate-200 leading-tight">${item.name}</span>
+                    </div>
+                    <div class="text-emerald-400 font-mono text-sm font-bold">$${item.price.toFixed(2)}</div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function addToOrder(item) {
+            const existing = activeOrder.find(o => o.id === item.id);
+            if (existing) {
+                existing.qty++;
+            } else {
+                activeOrder.push({ ...item, qty: 1 });
+            }
+            renderActiveOrder();
+        }
+
+        function removeFromOrder(itemId) {
+            activeOrder = activeOrder.filter(o => o.id !== itemId);
+            renderActiveOrder();
+        }
+
+        function clearCurrentOrder() {
+            activeOrder = [];
+            document.getElementById('cash-given-input').value = '';
+            renderActiveOrder();
+        }
+
+        function renderActiveOrder() {
+            const container = document.getElementById('active-order-list');
+            const countBadge = document.getElementById('order-item-count');
+            const totalDisplay = document.getElementById('order-total-price');
+
+            if (activeOrder.length === 0) {
+                container.innerHTML = '<div class="text-slate-500 text-center py-6 text-xs italic">Klicke Artikel links an, um sie zur Bestellung hinzuzufügen.</div>';
+                countBadge.innerText = '0 Artikel';
+                totalDisplay.innerText = '$0.00';
+                calculateChange();
+                return;
+            }
+
+            let total = 0;
+            let totalItems = 0;
+            container.innerHTML = '';
+
+            activeOrder.forEach(item => {
+                const itemTotal = item.price * item.qty;
+                total += itemTotal;
+                totalItems += item.qty;
+
+                const row = document.createElement('div');
+                row.className = 'flex items-center justify-between bg-slate-950 p-2 rounded-lg border border-slate-800';
+                row.innerHTML = `
+                    <div>
+                        <div class="text-xs font-bold text-slate-200">${item.name}</div>
+                        <div class="text-[10px] text-slate-400 font-mono">${item.qty}x @ $${item.price.toFixed(2)}</div>
+                    </div>
+                    <div class="flex items-center space-x-2">
+                        <span class="font-mono text-xs text-amber-400 font-bold">$${itemTotal.toFixed(2)}</span>
+                        <button onclick="removeFromOrder('${item.id}')" class="text-slate-500 hover:text-red-400 p-1"><i class="fa-solid fa-trash text-xs"></i></button>
                     </div>
                 `;
-                grid.appendChild(card);
+                container.appendChild(row);
             });
-            updateShoppingList(data);
+
+            countBadge.innerText = `${totalItems} Artikel`;
+            totalDisplay.innerText = `$${total.toFixed(2)}`;
+            calculateChange();
         }
 
-        function updateCount(item, change) {
-            const data = getInventoryData();
-            let current = data[item] !== undefined ? data[item] : 0;
-            current += change;
-            if (current < 0) current = 0;
-            data[item] = current;
-            saveInventoryData(data);
-            renderInventory();
-        }
+        function calculateChange() {
+            const total = activeOrder.reduce((sum, item) => sum + (item.price * item.qty), 0);
+            const cashGiven = parseFloat(document.getElementById('cash-given-input').value) || 0;
+            const changeDisplay = document.getElementById('change-due-display');
 
-        function resetInventory() {
-            if (confirm("Lagerbestand wirklich zurücksetzen?")) {
-                localStorage.removeItem('ffs_inventory');
-                renderInventory();
+            const change = cashGiven - total;
+            if (change >= 0) {
+                changeDisplay.innerText = `$${change.toFixed(2)}`;
+                changeDisplay.className = 'font-mono text-lg font-bold text-emerald-400';
+            } else {
+                changeDisplay.innerText = `-$${Math.abs(change).toFixed(2)}`;
+                changeDisplay.className = 'font-mono text-lg font-bold text-red-400';
             }
         }
 
-        // Einkaufsliste generieren (< 3 Stück)
-        function updateShoppingList(data) {
-            const listContainer = document.getElementById('shopping-list');
-            const lowItems = items.filter(item => (data[item] !== undefined ? data[item] : 0) < 3);
+        function setExactCash() {
+            const total = activeOrder.reduce((sum, item) => sum + (item.price * item.qty), 0);
+            document.getElementById('cash-given-input').value = total.toFixed(2);
+            calculateChange();
+        }
+
+        function completeOrder() {
+            if (activeOrder.length === 0) return;
+            const total = activeOrder.reduce((sum, item) => sum + (item.price * item.qty), 0);
+            
+            dailyRevenue += total;
+            totalCustomers++;
+            activeOrder.forEach(item => {
+                if (item.id.startsWith('b')) totalBurgersSold += item.qty;
+            });
+
+            showToast(`Bestellung im Wert von $${total.toFixed(2)} abgeschlossen!`, 'success');
+            clearCurrentOrder();
+            updateDashboard();
+            updateHeaderDisplay();
+            saveToLocalStorage();
+        }
+
+        function addOrderToQueue() {
+            if (activeOrder.length === 0) return;
+            orderQueue.push([...activeOrder]);
+            showToast('Bestellung in Warteschlange verschoben.', 'info');
+            clearCurrentOrder();
+            renderQueue();
+        }
+
+        function renderQueue() {
+            const container = document.getElementById('order-queue-list');
+            document.getElementById('queue-count').innerText = `${orderQueue.length} Bestellungen`;
+
+            if (orderQueue.length === 0) {
+                container.innerHTML = '<div class="text-xs text-slate-500 text-center py-2">Keine wartenden Bestellungen</div>';
+                return;
+            }
+
+            container.innerHTML = '';
+            orderQueue.forEach((order, index) => {
+                const total = order.reduce((sum, i) => sum + (i.price * i.qty), 0);
+                const itemSummary = order.map(i => `${i.qty}x ${i.name}`).join(', ');
+
+                const card = document.createElement('div');
+                card.className = 'bg-slate-950 p-2.5 rounded-xl border border-slate-800 flex items-center justify-between text-xs';
+                card.innerHTML = `
+                    <div class="truncate pr-2">
+                        <span class="font-bold text-amber-400">#${index+1}</span>
+                        <span class="text-slate-300 ml-1 truncate">${itemSummary}</span>
+                    </div>
+                    <div class="flex items-center space-x-2 shrink-0">
+                        <span class="font-mono font-bold text-emerald-400">$${total.toFixed(2)}</span>
+                        <button onclick="loadFromQueue(${index})" class="bg-amber-500 hover:bg-amber-400 text-slate-950 px-2 py-1 rounded font-bold">Laden</button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function loadFromQueue(index) {
+            activeOrder = orderQueue.splice(index, 1)[0];
+            renderActiveOrder();
+            renderQueue();
+        }
+
+        /* --- RECIPES & MENU --- */
+        function renderRecipes() {
+            const container = document.getElementById('recipes-grid');
+            container.innerHTML = '';
+
+            const allRecipes = [
+                { name: 'Standard Burger', cat: 'Burger', price: '$5.50', ingredients: ['Burger Brötchen', 'Gefrorene Rindefleisch-Patty', 'Salat'], desc: 'Der klassische Einstiegsburger.' },
+                { name: 'Cheeseburger', cat: 'Burger', price: '$6.50', ingredients: ['Burger Brötchen', 'Gefrorene Rindefleisch-Patty', 'Cheddar-Käse', 'Salat'], desc: 'Mit geschmolzenem Cheddar.' },
+                { name: 'Doppel Cheeseburger', cat: 'Burger', price: '$8.50', ingredients: ['Burger Brötchen', '2x Rindfleisch-Patty', '2x Cheddar-Käse', 'Mayonnaise'], desc: 'Für den großen Hunger.' },
+                { name: 'Bacon Deluxe', cat: 'Burger', price: '$9.00', ingredients: ['Burger Brötchen', 'Rindfleisch-Patty', 'Cheddar-Käse', 'Gewürzgurken', 'Ketchup'], desc: 'Herzhafter Bacon-Geschmack.' },
+                { name: 'Pommes Frites', cat: 'Beilagen', price: '$2.50 - $3.50', ingredients: ['Gefrorene Pommes', 'Frittieröl', 'Pommesbecher (Klein/Mittel/Groß)'], desc: 'Goldbraun und knusprig frittiert.' },
+                { name: 'Softdrinks', cat: 'Getränke', price: '$2.00 - $3.00', ingredients: ['Splash Cola / Light Splash Cola', 'Mr. Hoop / Youma', 'Eisbecher'], desc: 'Erfrischende Kaltgetränke.' }
+            ];
+
+            allRecipes.forEach(r => {
+                const card = document.createElement('div');
+                card.className = 'bg-slate-900 border border-slate-800 p-4 rounded-2xl space-y-2';
+                card.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <h3 class="font-bold text-slate-100 text-sm">${r.name}</h3>
+                        <span class="text-xs bg-red-500/20 text-red-400 px-2 py-0.5 rounded-full font-mono">${r.price}</span>
+                    </div>
+                    <p class="text-xs text-slate-400">${r.desc}</p>
+                    <div class="pt-2 border-t border-slate-800">
+                        <span class="text-[10px] uppercase font-bold text-slate-500 block mb-1">Zutaten:</span>
+                        <div class="flex flex-wrap gap-1">
+                            ${r.ingredients.map(i => `<span class="text-[10px] bg-slate-950 text-slate-300 px-2 py-0.5 rounded-md border border-slate-800">${i}</span>`).join('')}
+                        </div>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function filterRecipes() {
+            // Simple filter placeholder
+        }
+
+        /* --- INVENTORY & STOCK TRACKER --- */
+        function renderInventory() {
+            const container = document.getElementById('inventory-grid');
+            container.innerHTML = '';
+
+            inventory.forEach((item, index) => {
+                const isLow = item.qty <= item.minAlert;
+                const card = document.createElement('div');
+                card.className = `bg-slate-900 border ${isLow ? 'border-red-500/50 shadow-lg shadow-red-500/10' : 'border-slate-800'} p-3 rounded-2xl flex flex-col justify-between space-y-3`;
+                card.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <span class="text-xs font-bold text-slate-200 block">${item.name}</span>
+                            <span class="text-[10px] text-slate-400 font-mono">Limit: ${item.minAlert} ${item.unit}</span>
+                        </div>
+                        ${isLow ? '<span class="bg-red-500 text-slate-950 text-[10px] font-bold px-1.5 py-0.5 rounded animate-pulse">Niedrig</span>' : ''}
+                    </div>
+                    <div class="flex items-center justify-between bg-slate-950 p-2 rounded-xl border border-slate-800">
+                        <button onclick="updateStock(${index}, -5)" class="w-8 h-8 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold rounded-lg touch-active text-sm">-5</button>
+                        <button onclick="updateStock(${index}, -1)" class="w-8 h-8 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold rounded-lg touch-active text-sm">-1</button>
+                        <span class="font-mono font-bold text-amber-400 text-base">${item.qty}</span>
+                        <button onclick="updateStock(${index}, 1)" class="w-8 h-8 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold rounded-lg touch-active text-sm">+1</button>
+                        <button onclick="updateStock(${index}, 5)" class="w-8 h-8 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold rounded-lg touch-active text-sm">+5</button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+
+            renderLowStockWarnings();
+        }
+
+        function updateStock(index, amount) {
+            inventory[index].qty += amount;
+            if (inventory[index].qty < 0) inventory[index].qty = 0;
+            if (inventory[index].qty > inventory[index].max) inventory[index].qty = inventory[index].max;
+            renderInventory();
+            saveToLocalStorage();
+        }
+
+        function resetInventoryToDefault() {
+            inventory.forEach(i => i.qty = Math.floor(i.max / 2));
+            renderInventory();
+            saveToLocalStorage();
+            showToast('Lagerbestand aufgefüllt.', 'info');
+        }
+
+        function renderLowStockWarnings() {
+            const container = document.getElementById('low-stock-list');
+            const lowItems = inventory.filter(i => i.qty <= i.minAlert);
 
             if (lowItems.length === 0) {
-                listContainer.innerHTML = '<span class="text-emerald-400 text-xs">Alles gut! Keine Artikel unter Mindestbestand.</span>';
-            } else {
-                listContainer.innerHTML = '<ul class="list-disc list-inside space-y-1 text-xs text-rose-300">' + 
-                    lowItems.map(item => `<li><strong>${item}</strong> (Bestand: ${data[item] || 0})</li>`).join('') + 
-                    '</ul>';
+                container.innerHTML = '<span class="text-xs text-emerald-400 italic">Alle Vorräte im grünen Bereich.</span>';
+                return;
+            }
+
+            container.innerHTML = '';
+            lowItems.forEach(item => {
+                const badge = document.createElement('div');
+                badge.className = 'bg-red-500/10 border border-red-500/30 text-red-400 text-xs px-3 py-1.5 rounded-xl font-medium flex items-center space-x-2';
+                badge.innerHTML = `<i class="fa-solid fa-circle-exclamation"></i><span>${item.name} (${item.qty} ${item.unit} übrig)</span>`;
+                container.appendChild(badge);
+            });
+        }
+
+        /* --- KÜCHEN-TIMER --- */
+        function startCustomTimer(name, seconds) {
+            const timerId = Date.now();
+            const timerObj = { id: timerId, name, remaining: seconds, total: seconds };
+            activeTimers.push(timerObj);
+            renderTimers();
+        }
+
+        function renderTimers() {
+            const container = document.getElementById('active-timers-container');
+            const miniDisplay = document.getElementById('mini-timer-display');
+
+            if (activeTimers.length === 0) {
+                container.innerHTML = '<div class="text-slate-500 text-xs text-center py-6 col-span-2">Keine aktiven Timer. Nutze die Buttons oben, um einen Timer zu starten.</div>';
+                miniDisplay.innerText = 'Kein Timer aktiv';
+                return;
+            }
+
+            container.innerHTML = '';
+            const firstActive = activeTimers[0];
+            const mins = Math.floor(firstActive.remaining / 60).toString().padStart(2, '0');
+            const secs = (firstActive.remaining % 60).toString().padStart(2, '0');
+            miniDisplay.innerText = `${firstActive.name}: ${mins}:${secs}`;
+
+            activeTimers.forEach(t => {
+                const m = Math.floor(t.remaining / 60).toString().padStart(2, '0');
+                const s = (t.remaining % 60).toString().padStart(2, '0');
+                const progress = (t.remaining / t.total) * 100;
+
+                const card = document.createElement('div');
+                card.className = 'bg-slate-950 p-3 rounded-xl border border-slate-800 flex items-center justify-between';
+                card.innerHTML = `
+                    <div>
+                        <div class="text-xs font-bold text-slate-200">${t.name}</div>
+                        <div class="font-mono text-xl font-bold text-emerald-400">${m}:${s}</div>
+                    </div>
+                    <button onclick="removeTimer(${t.id})" class="bg-slate-900 hover:bg-red-500/20 hover:text-red-400 text-slate-400 p-2 rounded-lg border border-slate-800 transition">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function removeTimer(id) {
+            activeTimers = activeTimers.filter(t => t.id !== id);
+            renderTimers();
+        }
+
+        // Timer Tick Loop
+        setInterval(() => {
+            if (activeTimers.length > 0) {
+                activeTimers.forEach(t => {
+                    if (t.remaining > 0) t.remaining--;
+                });
+                activeTimers = activeTimers.filter(t => t.remaining > 0);
+                renderTimers();
+            }
+        }, 1000);
+
+        /* --- DASHBOARD & STATS --- */
+        function updateDashboard() {
+            document.getElementById('stat-revenue').innerText = `$${dailyRevenue.toFixed(2)}`;
+            document.getElementById('stat-customers').innerText = totalCustomers;
+            document.getElementById('stat-tips').innerText = `$${dailyTips.toFixed(2)}`;
+            document.getElementById('stat-burgers').innerText = totalBurgersSold;
+
+            const percentage = Math.min(100, (dailyRevenue / dailyGoal) * 100);
+            document.getElementById('goal-percentage').innerText = `${percentage.toFixed(0)}%`;
+            document.getElementById('goal-progress-bar').style.width = `${percentage}%`;
+        }
+
+        function updateHeaderDisplay() {
+            document.getElementById('current-day-display').innerText = `Tag ${currentDay}`;
+            document.getElementById('daily-revenue-display').innerText = `$${dailyRevenue.toFixed(2)}`;
+        }
+
+        function nextDay() {
+            currentDay++;
+            dailyRevenue = 0.0;
+            dailyTips = 0.0;
+            totalCustomers = 0;
+            totalBurgersSold = 0;
+            updateDashboard();
+            updateHeaderDisplay();
+            saveToLocalStorage();
+            showToast(`Tag ${currentDay} gestartet! Viel Erfolg!`, 'success');
+        }
+
+        /* --- UPGRADES & NOTES --- */
+        function renderUpgrades() {
+            const container = document.getElementById('upgrades-list');
+            container.innerHTML = '';
+
+            upgrades.forEach((u, index) => {
+                const card = document.createElement('div');
+                card.className = 'bg-slate-900 border border-slate-800 p-4 rounded-2xl flex items-center justify-between';
+                card.innerHTML = `
+                    <div>
+                        <h3 class="font-bold text-slate-100 text-sm">${u.name}</h3>
+                        <p class="text-xs text-slate-400 mt-0.5">${u.desc}</p>
+                        <span class="text-xs font-mono font-bold text-amber-400 mt-2 block">$${u.price}</span>
+                    </div>
+                    <button onclick="toggleUpgrade(${index})" class="${u.bought ? 'bg-emerald-600/20 text-emerald-400 border border-emerald-500/30' : 'bg-slate-800 hover:bg-slate-700 text-slate-200'} text-xs font-bold px-4 py-2 rounded-xl transition">
+                        ${u.bought ? '<i class="fa-solid fa-check mr-1"></i> Freigeschaltet' : 'Freischalten'}
+                    </button>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function toggleUpgrade(index) {
+            upgrades[index].bought = !upgrades[index].bought;
+            renderUpgrades();
+            saveToLocalStorage();
+        }
+
+        function saveNotes() {
+            const notes = document.getElementById('custom-notes').value;
+            localStorage.setItem('ffs_notes', notes);
+        }
+
+        /* --- TOAST NOTIFICATIONS --- */
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            
+            let bgClass = 'bg-slate-900 border-slate-700 text-slate-100';
+            if (type === 'success') bgClass = 'bg-emerald-950 border-emerald-600/50 text-emerald-200';
+            if (type === 'info') bgClass = 'bg-slate-900 border-amber-500/50 text-amber-200';
+
+            toast.className = `${bgClass} border px-4 py-3 rounded-2xl shadow-xl text-xs font-medium flex items-center space-x-2 transition transform translate-y-2 opacity-0`;
+            toast.innerHTML = `<i class="fa-solid fa-circle-info text-amber-400"></i><span>${message}</span>`;
+            
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            }, 10);
+
+            setTimeout(() => {
+                toast.classList.add('translate-y-2', 'opacity-0');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        /* --- LOCAL STORAGE PERSISTENCE --- */
+        function saveToLocalStorage() {
+            const data = {
+                currentDay,
+                dailyRevenue,
+                dailyTips,
+                totalCustomers,
+                totalBurgersSold,
+                inventory,
+                upgrades
+            };
+            localStorage.setItem('ffs_companion_data', JSON.stringify(data));
+        }
+
+        function loadFromLocalStorage() {
+            const saved = localStorage.getItem('ffs_companion_data');
+            if (saved) {
+                try {
+                    const data = JSON.parse(saved);
+                    currentDay = data.currentDay || 1;
+                    dailyRevenue = data.dailyRevenue || 0.0;
+                    dailyTips = data.dailyTips || 0.0;
+                    totalCustomers = data.totalCustomers || 0;
+                    totalBurgersSold = data.totalBurgersSold || 0;
+                    if (data.inventory) inventory = data.inventory;
+                    if (data.upgrades) upgrades = data.upgrades;
+                } catch(e) {
+                    console.error('Fehler beim Laden der Speicherdaten', e);
+                }
+            }
+            const savedNotes = localStorage.getItem('ffs_notes');
+            if (savedNotes) {
+                document.getElementById('custom-notes').value = savedNotes;
             }
         }
-
-        // Timer Logik
-        const activeTimers = {};
-        function startTimer(id, duration) {
-            const display = document.getElementById(`timer-display-${id}`);
-            if (activeTimers[id]) clearInterval(activeTimers[id]);
-            
-            let timeLeft = duration;
-            activeTimers[id] = setInterval(() => {
-                let m = Math.floor(timeLeft / 60);
-                let s = timeLeft % 60;
-                display.innerText = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
-                
-                if (timeLeft <= 0) {
-                    clearInterval(activeTimers[id]);
-                    display.innerText = "FERTIG!";
-                }
-                timeLeft--;
-            }, 1000);
-        }
-
-        // Schicht-Kasse Logik
-        function saveShiftData() {
-            const income = parseFloat(document.getElementById('shift-income').value) || 0;
-            const expenses = parseFloat(document.getElementById('shift-expenses').value) || 0;
-            const profit = income - expenses;
-            const profitEl = document.getElementById('shift-profit');
-            profitEl.innerText = `$${profit.toFixed(2)}`;
-            profitEl.className = `text-lg font-bold ${profit >= 0 ? 'text-emerald-400' : 'text-rose-400'}`;
-            
-            localStorage.setItem('ffs_shift', JSON.stringify({income, expenses}));
-        }
-
-        // Init beim Laden
-        window.onload = () => {
-            renderInventory();
-            const shift = JSON.parse(localStorage.getItem('ffs_shift') || '{}');
-            if (shift.income !== undefined) document.getElementById('shift-income').value = shift.income;
-            if (shift.expenses !== undefined) document.getElementById('shift-expenses').value = shift.expenses;
-            saveShiftData();
-        };
     </script>
 </body>
 </html>
