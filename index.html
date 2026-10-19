@@ -224,13 +224,15 @@
                 </div>
             </section>
 
-            <!-- TAB 2: REZEPTE & MENÜ -->
+            <!-- TAB 2: REZEPTE & MENÜ (Mit Preis-Anpassung) -->
             <section id="tab-recipes" class="tab-content hidden space-y-4">
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                    <h2 class="text-lg font-bold text-slate-100 flex items-center gap-2">
-                        <i class="fa-solid fa-book-open text-red-400"></i> Rezept- & Menüreferenz
-                    </h2>
-                    <input type="text" id="recipe-search" oninput="filterRecipes()" placeholder="Rezept oder Zutat suchen..." class="bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-sm text-slate-200 w-full sm:w-64 focus:outline-none focus:border-red-500">
+                    <div>
+                        <h2 class="text-lg font-bold text-slate-100 flex items-center gap-2">
+                            <i class="fa-solid fa-book-open text-red-400"></i> Rezepte & Menü-Preise
+                        </h2>
+                        <p class="text-xs text-slate-400">Passe hier die Verkaufspreise an – sie werden sofort für die Kasse übernommen!</p>
+                    </div>
                 </div>
 
                 <div id="recipes-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -386,7 +388,7 @@
     <script>
         /* --- APPLICATION DATA STRUCTURES --- */
 
-        // Recipe & Menu Database
+        // Recipe & Menu Database (mit eindeutigen IDs für Preis-Sync)
         const menuData = {
             burgers: [
                 { id: 'b1', name: 'Standard Burger', price: 10.62, ingredients: ['Burger-Brötchen', 'Gefrorene Rindefleisch-Patty', 'Salat'], icon: 'fa-burger' },
@@ -395,7 +397,7 @@
                 { id: 'b7', name: 'Doppel Chicken Burger', price: 12.50, ingredients: ['Burger-Brötchen', '2x Gefrorene Hähnchen-Patty', 'Salat', 'Mayonnaise'], icon: 'fa-burger' },
                 { id: 'b2', name: 'Cheeseburger', price: 6.50, ingredients: ['Burger-Brötchen', 'Gefrorene Rindefleisch-Patty', 'Cheddar-Käse', 'Salat'], icon: 'fa-burger' },
                 { id: 'b3', name: 'Doppel Cheeseburger', price: 8.50, ingredients: ['Burger-Brötchen', '2x Gefrorene Rindefleisch-Patty', '2x Cheddar-Käse', 'Mayonnaise'], icon: 'fa-burger' },
-                { id: 'b4', name: 'Bacon Deluxe', price: 9.00, ingredients: ['Burger-Brötchen', 'Gefrorene Rindefleisch-Patty', 'Cheddar-Käse', 'Gewürzgurten', 'Ketchup'], icon: 'fa-burger' }
+                { id: 'b4', name: 'Bacon Deluxe', price: 9.00, ingredients: ['Burger-Brötchen', 'Gefrorene Rindefleisch-Patty', 'Cheddar-Käse', 'Gewürzgurken', 'Ketchup'], icon: 'fa-burger' }
             ],
             sides: [
                 { id: 's1', name: 'Pommes (Klein)', price: 2.50, ingredients: ['Gefrorene Pommes', 'Pommesbecher (Klein)', 'Frittieröl'], icon: 'fa-box-archive' },
@@ -466,7 +468,7 @@
         /* --- INITIALIZATION --- */
         window.onload = function() {
             loadFromLocalStorage();
-            renderMenuCategory('burgers');
+            renderMenuCategory(currentCategory);
             renderRecipes();
             renderInventory();
             renderUpgrades();
@@ -486,6 +488,10 @@
             const activeBtn = document.getElementById(`nav-${tabId}`);
             activeBtn.classList.add('bg-slate-800', 'text-amber-400');
             activeBtn.classList.remove('text-slate-400');
+
+            if(tabId === 'recipes') {
+                renderRecipes(); // Aktualisiert die Rezept-Ansicht mit aktuellen Preisen
+            }
         }
 
         /* --- CASHIER & ORDER CALCULATOR --- */
@@ -656,45 +662,66 @@
             renderQueue();
         }
 
-        /* --- RECIPES & MENU --- */
+        /* --- RECIPES & MENU (MIT PREIS-ANPASSUNG) --- */
         function renderRecipes() {
             const container = document.getElementById('recipes-grid');
             container.innerHTML = '';
 
-            const allRecipes = [
-                { name: 'Standard Burger', cat: 'Burger', price: '$10.62', ingredients: ['Burger-Brötchen', 'Gefrorene Rindefleisch-Patty', 'Salat'], desc: 'Der klassische Einstiegsburger.' },
-                { name: 'Doppel Standard Burger', cat: 'Burger', price: '$19.38', ingredients: ['Burger-Brötchen', '2x Gefrorene Rindefleisch-Patty', 'Salat'], desc: 'Doppelte Portion Rindfleisch.' },
-                { name: 'Chicken Burger', cat: 'Burger', price: '$7.50', ingredients: ['Burger-Brötchen', 'Gefrorene Hähnchen-Patty', 'Salat', 'Mayonnaise'], desc: 'Knuspriges Hähnchen-Patty.' },
-                { name: 'Doppel Chicken Burger', cat: 'Burger', price: '$12.50', ingredients: ['Burger-Brötchen', '2x Gefrorene Hähnchen-Patty', 'Salat', 'Mayonnaise'], desc: 'Doppelter Hähnchen-Genuss.' },
-                { name: 'Cheeseburger', cat: 'Burger', price: '$6.50', ingredients: ['Burger-Brötchen', 'Gefrorene Rindefleisch-Patty', 'Cheddar-Käse', 'Salat'], desc: 'Mit geschmolzenem Cheddar.' },
-                { name: 'Doppel Cheeseburger', cat: 'Burger', price: '$8.50', ingredients: ['Burger-Brötchen', '2x Rindfleisch-Patty', '2x Cheddar-Käse', 'Mayonnaise'], desc: 'Für den großen Hunger.' },
-                { name: 'Bacon Deluxe', cat: 'Burger', price: '$9.00', ingredients: ['Burger-Brötchen', 'Rindfleisch-Patty', 'Cheddar-Käse', 'Gewürzgurken', 'Ketchup'], desc: 'Herzhafter Bacon-Geschmack.' },
-                { name: 'Pommes Frites', cat: 'Beilagen', price: '$2.50 - $3.50', ingredients: ['Gefrorene Pommes', 'Frittieröl', 'Pommesbecher (Klein/Mittel/Groß)'], desc: 'Goldbraun und knusprig frittiert.' },
-                { name: 'Softdrinks', cat: 'Getränke', price: '$2.00 - $3.00', ingredients: ['Splash Cola / Light Splash Cola', 'Mr. Hoop / Youma', 'Eisbecher'], desc: 'Erfrischende Kaltgetränke.' }
+            // Alle Kategorien durchgehen und Karten mit Eingabefeld für den Preis erstellen
+            const categories = [
+                { title: '🍔 Burger', items: menuData.burgers },
+                { title: '🍟 Beilagen & Nuggets', items: menuData.sides },
+                { title: '🥤 Getränke', items: menuData.drinks }
             ];
 
-            allRecipes.forEach(r => {
-                const card = document.createElement('div');
-                card.className = 'bg-slate-900 border border-slate-800 p-4 rounded-2xl space-y-2';
-                card.innerHTML = `
-                    <div class="flex justify-between items-start">
-                        <h3 class="font-bold text-slate-100 text-sm">${r.name}</h3>
-                        <span class="text-xs bg-red-500/20 text-red-400 px-2 py-0.5 rounded-full font-mono">${r.price}</span>
-                    </div>
-                    <p class="text-xs text-slate-400">${r.desc}</p>
-                    <div class="pt-2 border-t border-slate-800">
-                        <span class="text-[10px] uppercase font-bold text-slate-500 block mb-1">Zutaten:</span>
-                        <div class="flex flex-wrap gap-1">
-                            ${r.ingredients.map(i => `<span class="text-[10px] bg-slate-950 text-slate-300 px-2 py-0.5 rounded-md border border-slate-800">${i}</span>`).join('')}
+            categories.forEach(cat => {
+                const header = document.createElement('div');
+                header.className = 'col-span-full font-bold text-amber-400 text-sm mt-2 border-b border-slate-800 pb-1';
+                header.innerText = cat.title;
+                container.appendChild(header);
+
+                cat.items.forEach(item => {
+                    const card = document.createElement('div');
+                    card.className = 'bg-slate-900 border border-slate-800 p-4 rounded-2xl space-y-3 flex flex-col justify-between';
+                    card.innerHTML = `
+                        <div>
+                            <div class="flex justify-between items-start mb-1">
+                                <h3 class="font-bold text-slate-100 text-sm">${item.name}</h3>
+                            </div>
+                            <div class="text-[11px] text-slate-400 mb-2">Zutaten: ${item.ingredients.join(' • ')}</div>
                         </div>
-                    </div>
-                `;
-                container.appendChild(card);
+                        <div class="flex items-center justify-between pt-2 border-t border-slate-800/80">
+                            <span class="text-xs text-slate-400 font-medium">Verkaufspreis ($):</span>
+                            <div class="flex items-center space-x-1">
+                                <span class="text-emerald-400 font-bold">$</span>
+                                <input type="number" step="0.01" value="${item.price.toFixed(2)}" onchange="updateItemPrice('${item.id}', this.value)" class="w-24 bg-slate-950 border border-slate-700 rounded-lg px-2 py-1 text-emerald-400 font-mono font-bold text-sm focus:outline-none focus:border-amber-500 text-right">
+                            </div>
+                        </div>
+                    `;
+                    container.appendChild(card);
+                });
             });
         }
 
-        function filterRecipes() {
-            // Simple filter placeholder
+        function updateItemPrice(id, newPriceVal) {
+            const val = parseFloat(newPriceVal);
+            if (isNaN(val) || val < 0) return;
+
+            // In menuData suchen und Preis aktualisieren
+            let found = false;
+            Object.keys(menuData).forEach(cat => {
+                const item = menuData[cat].find(i => i.id === id);
+                if (item) {
+                    item.price = val;
+                    found = true;
+                }
+            });
+
+            if (found) {
+                saveToLocalStorage();
+                renderMenuCategory(currentCategory); // Kasse aktualisieren
+                showToast('Preis aktualisiert!', 'success');
+            }
         }
 
         /* --- INVENTORY & STOCK TRACKER --- */
@@ -908,6 +935,14 @@
 
         /* --- LOCAL STORAGE PERSISTENCE --- */
         function saveToLocalStorage() {
+            // Speichert Preise als einfaches Objekt (id -> price)
+            const customPrices = {};
+            Object.keys(menuData).forEach(cat => {
+                menuData[cat].forEach(item => {
+                    customPrices[item.id] = item.price;
+                });
+            });
+
             const data = {
                 currentDay,
                 dailyRevenue,
@@ -915,7 +950,8 @@
                 totalCustomers,
                 totalBurgersSold,
                 inventory,
-                upgrades
+                upgrades,
+                customPrices
             };
             localStorage.setItem('ffs_companion_data', JSON.stringify(data));
         }
@@ -932,6 +968,17 @@
                     totalBurgersSold = data.totalBurgersSold || 0;
                     if (data.inventory) inventory = data.inventory;
                     if (data.upgrades) upgrades = data.upgrades;
+                    
+                    // Gespeicherte Preise auf menuData anwenden
+                    if (data.customPrices) {
+                        Object.keys(menuData).forEach(cat => {
+                            menuData[cat].forEach(item => {
+                                if (data.customPrices[item.id] !== undefined) {
+                                    item.price = data.customPrices[item.id];
+                                }
+                            });
+                        });
+                    }
                 } catch(e) {
                     console.error('Fehler beim Laden der Speicherdaten', e);
                 }
